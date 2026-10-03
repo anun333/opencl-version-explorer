@@ -1,28 +1,42 @@
-# Publishing the explorer on GitHub Pages
+# Publishing: what is live, and how to take it down
 
-Nothing here has been done for you. Publishing makes the page public and cannot be fully taken back (copies and caches persist), so these are your steps, in your account.
+## What was published (2026-10-03)
 
-## Before you publish: decide these
+- Repository: https://github.com/anun333/opencl-version-explorer (public; free Pages require that)
+- Explorer: https://anun333.github.io/opencl-version-explorer/
+- Voting page: https://anun333.github.io/opencl-version-explorer/vote.html
+- 14 issues ("Direction: ...") and 40 comments, one comment per votable concern, created by `tools/seed_votes.py`.
 
-1. **Appendix H licensing.** The *Optional features* tab shows tables from `api/appendix_h.asciidoc`, a file that states no licence. See `CREDITS.md`. Either ask Khronos, or remove those verbatim rows.
-2. **What you say about AI assistance.** The README and the page footer say the tool was built with AI assistance and has not been reviewed by the OpenCL working group. Keep that. If you ever submit anything to a Khronos repository, read their AI-assisted-contribution statement first.
-3. **Personal information.** The page shows one sample device by its model name only (no kernel or driver details). Remove the *Sample device* line in `tools/concerns.py` if you would rather not.
-4. **Name and tone.** The title and footer say the tool is independent and not affiliated with Khronos. Check you are comfortable with the repository name too; avoid names that look official.
+## How voting works
 
-## Steps
+There is no server. A vote is a GitHub reaction (👍 or 👎) on an issue (the direction) or a comment (a concern), so voters are people with GitHub accounts, one reaction per person per item. `vote.html` reads the counts from the GitHub API in the visitor's browser and caches them for five minutes (anonymous API calls are limited to 60 per hour per address). It trusts only issues and comments written by the repository owner and carrying the hidden markers `<!-- vote-direction: ID -->` and `<!-- vote-item: ID -->`, so a stray comment cannot add a line or fake a count.
 
-1. Create an empty repository on GitHub (public, because free Pages require it).
-2. In this folder: `git init`, `git add .`, `git commit`, add the remote, `git push -u origin main`.
-3. In the repository: **Settings, Pages, Build and deployment, Source: GitHub Actions**.
-4. The workflow `.github/workflows/pages.yml` runs on the push and publishes `site/`. The address appears in the workflow run and under Settings, Pages.
+What a vote means: on a direction, 👍 = I would want this explored for a future version; on a concern, 👍 = I agree it is a real concern and 👎 = I do not think so or think it is wrong. It is an informal, unweighted poll with no authority. Reactions are not sybil-resistant: anyone can create accounts.
 
-Links to a specific view work on the hosted page, for example `.../#compare?ca=v3.0.19&cb=v3.1.0`, because the view lives in the URL after the `#`. Use the *Copy link to this view* button.
+Line items are identified by a hash of the direction and the concern text. If the data is regenerated and a line's wording changes, it becomes a new item and starts at zero; `seed_votes.py` only adds what is missing and never deletes.
+
+## Things to know as the owner
+
+- GitHub emails you about new reactions, comments and issues on your repository. Adjust under Settings, Notifications, or watch settings on the repository.
+- Anyone can comment on the issues. The page ignores comments that are not yours, but the comments still appear on GitHub. You can moderate, lock or delete them there.
+- The page shows anonymous visitors only counts; they vote by following the link to GitHub and signing in.
+
+## Decisions that were left open
+
+1. **Appendix H licensing.** The *Optional features* tab shows tables from `api/appendix_h.asciidoc`, a file that states no licence (see `CREDITS.md`). If you want to remove them: edit `tools/extract_optional.py` or blank the `rows` in `data/optional.json`, rebuild, push.
+2. **AI-assistance statement.** The page footer and README say the tool was built with AI assistance and has not been reviewed by the OpenCL working group. Read Khronos's own AI-assisted-contribution statement before submitting anything to their repositories.
+
+## Taking it down
+
+- Unpublish the pages only: `gh api -X DELETE repos/anun333/opencl-version-explorer/pages`
+- Close the poll: close or delete the 14 issues, or make the repository private (Pages then stops on a free plan).
+- Remove everything: `gh repo delete anun333/opencl-version-explorer` (cannot be undone; copies and caches may persist).
 
 ## Keeping it current
 
-The page is a snapshot built from the commits in `PIN`. To refresh: `./fetch.sh --latest && ./tools/regen.sh`, review the diff, commit the new `opencl-explorer.html`, push. The workflow deploys it. An automatic scheduled rebuild is deliberately not set up: it would publish new data without anyone reading it first.
+The pages are a snapshot built from the commits in `PIN`. To refresh: `./fetch.sh --latest && ./tools/regen.sh`, review the diff, commit `opencl-explorer.html` and `site-data/concerns.json`, push. The workflow redeploys. After a refresh, run `python3 tools/seed_votes.py anun333/opencl-version-explorer --site-url https://anun333.github.io/opencl-version-explorer/` to add any new concern lines. An automatic scheduled rebuild is deliberately not set up: it would publish new data without anyone reading it first.
 
 ## Check it locally first
 
-    python3 tools/build_site.py
-    python3 -m http.server 8000 --directory site      # then open http://localhost:8000/
+    python3 tools/build_site.py --repo anun333/opencl-version-explorer
+    python3 tools/test_site.py        # serves site/ over HTTP, uses a fake GitHub API for the vote page

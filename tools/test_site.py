@@ -42,15 +42,18 @@ checks = {"compare": ("#compare?ca=v3.0.19&cb=v3.1.0", "v3.0.19 → v3.1.0"),
           "help": ("#help", "Start here"),
           "propose": ("#propose", "Checks you can see right now")}
 bad = []
+def visible(dom): return re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style).*?</\1>", "", dom, flags=re.S))      # text a person sees, never script source
+def status(dom):
+    m = re.search(r'<span id="status"[^>]*>(.*?)</span>', dom, re.S); return m.group(1) if m else ""
 def dump(url): return subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom", url], capture_output=True, text=True, timeout=120).stdout
 try:
     base = "http://127.0.0.1:%d" % port
     # the vote page against the fake API: real counts shown, a spoofed comment from another user ignored, failure handled
-    txt = re.sub(r"<[^>]+>", " ", dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/api", safe="")))
-    good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote on GitHub" in txt
+    page = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/api", safe="")); txt = visible(page)
+    good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote on GitHub" in txt and "unavailable" not in status(page) and "Counts from GitHub" in status(page)
     print("%-11s %s" % ("vote page", "ok" if good else "FAIL")); good or bad.append("vote page counts")
-    ft = re.sub(r"<[^>]+>", " ", dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/fail", safe="")))
-    good2 = "unavailable right now" in ft and D0["title"] in ft
+    fpage = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/fail", safe=""))
+    good2 = "unavailable right now" in status(fpage) and D0["title"] in visible(fpage) and "Outcomes so far" not in visible(fpage)
     print("%-11s %s" % ("vote fail", "ok" if good2 else "FAIL")); good2 or bad.append("vote page failure mode")
     for name, (frag, needle) in checks.items():
         out = subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--disable-gpu", "--virtual-time-budget=5000", "--dump-dom", "http://127.0.0.1:%d/index.html%s" % (port, frag)],
