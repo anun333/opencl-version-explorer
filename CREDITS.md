@@ -9,7 +9,7 @@ This tool is independent. It is not affiliated with, endorsed by, or reviewed by
 | `KhronosGroup/OpenCL-Docs`, `xml/cl.xml` | symbol names, extension names, revisions, dependencies, promotion and deprecation metadata | Apache License 2.0 (stated in the file) |
 | `KhronosGroup/OpenCL-Docs`, `api/appendix_e.asciidoc`, `api/opencl_architecture.asciidoc`, `api/opencl_platform_layer.asciidoc` | changelog sentences, requirement statements, counts of words | CC BY 4.0 (`SPDX-License-Identifier` in each file) |
 | `KhronosGroup/OpenCL-Docs`, `c/appendix_a.asciidoc` | OpenCL C changelog sentences | CC BY 4.0 (stated in the file) |
-| `KhronosGroup/OpenCL-Docs`, `api/appendix_h.asciidoc` | the optional-feature tables and prose shown in the *Optional features* tab | **The file carries a copyright line but no licence statement.** The repository says its files are "under a mix of copyright and license statements. Refer to the individual files." See the note below. |
+| `KhronosGroup/OpenCL-Docs`, `api/appendix_h.asciidoc` | read at build time for names (functions, queries, feature macros) and counts of table rows; **its wording is not embedded or redistributed** | The file carries a copyright line but no licence statement, which is why the wording is withheld. |
 | `KhronosGroup/OpenCL-Docs`, extension chapters (`api/cl_*.asciidoc`) | word counts and keyword counts only (no text is embedded) | CC BY 4.0 |
 | `KhronosGroup/OpenCL-Headers` | symbol lists and guards; the headers are compiled locally and modified copies are generated in a scratch folder | Apache License 2.0 |
 | `KhronosGroup/OpenCL-Headers`, `scripts/` (header generator) | run unmodified by the proposal tester | Apache License 2.0 |
@@ -22,7 +22,7 @@ The data is extracted, restructured, joined across versions, and in places summa
 
 ## Note on appendix H
 
-Because `appendix_h.asciidoc` states no licence, its tables are embedded in the page on the assumption that quoting them with attribution for study is acceptable. Before you redistribute the page widely, check this with Khronos or remove the *Optional features* verbatim rows; the rest of the page does not depend on them. This is a judgement for the person publishing, not something this tool can settle.
+Because `appendix_h.asciidoc` states no licence, the page does not embed its tables or prose. It shows names and counts derived from it and links to the specification for the wording. `tools/build_viewer.py` fails the build if known appendix H sentences appear in the page.
 
 ## Trademarks
 

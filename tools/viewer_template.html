@@ -136,7 +136,7 @@ function render(id, q){
 function show(id){ render(id, null); }
 main.addEventListener('input', syncHash); main.addEventListener('change', syncHash);
 window.addEventListener('hashchange', route);
-if (/^https?:$/.test(location.protocol)) $('#votelink').hidden = false;
+if (/^https?:$/.test(location.protocol) && M.features && M.features.voting) $('#votelink').hidden = false;
 $('#copylink').onclick = () => { syncHash(); const u = location.href; const done = ok => { $('#copylink').textContent = ok ? 'Link copied' : 'Copy failed'; setTimeout(() => $('#copylink').textContent = 'Copy link to this view', 1800); };
   try { navigator.clipboard.writeText(u).then(() => done(true), () => { prompt('Copy this link', u); done(false); }); } catch(e) { prompt('Copy this link', u); } };
 $('#stamp').textContent = `docs ${last} @ ${M.provenance.docs[last].commit.slice(0,8)} (${M.provenance.docs[last].date}) · headers up to ${M.provenance.headers.at(-1).ref} @ ${M.provenance.headers.at(-1).commit.slice(0,8)} (${M.provenance.headers.at(-1).date})`;
@@ -526,15 +526,19 @@ VIEWS.extensions = el => {
 };
 
 // ---------- optional features ----------
+// The wording of appendix H is not embedded (its source file states no licence); names and counts are, with a link to the spec.
+const APPH_URL = 'https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_API.html#opencl-3.0-backwards-compatibility';
+const appHLink = `<a href="${APPH_URL}" target="_blank" rel="noopener">appendix H of the OpenCL 3.0 API specification</a>`;
+const apisOf = f => [...new Set(f.rows.flatMap(r => r.api.split(/[,\s]+/).filter(x => /^cl[A-Z]\w+$|^CL_\w+$/.test(x))))];
 VIEWS.optional = el => {
   const req = M.changes.filter(c => c.kind==='required' || /required/i.test(c.text) && c.to==='OpenCL 3.1');
-  el.innerHTML = `<p class="small mute">Appendix H of the API spec is the contract for every feature OpenCL 3.0 made optional: how to detect it, and what each API does when it is absent. ${lab('ex','extracted')}. The appendix text is <b>identical</b> in v3.0.19 and v3.1.2 ${lab('de','derived')}: 3.1 did not change it. Where 3.1 made something <i>required</i>, the statement lives elsewhere (see below).</p>
+  el.innerHTML = `<p class="small mute">Appendix H of the API spec is the contract for every feature OpenCL 3.0 made optional: how to detect it, and what each API does when it is absent. ${lab('ex','extracted')}. The appendix text is <b>identical</b> in v3.0.19 and v3.1.2 ${lab('de','derived')}: 3.1 did not change it. Where 3.1 made something <i>required</i>, the statement lives elsewhere (see below). This page shows the names and counts; for the exact wording read ${appHLink}.</p>
   <h2>Required-in-3.1 statements found in the changelogs</h2>${changeTable(M.changes.filter(c=>c.to==='OpenCL 3.1' && (c.kind==='required' || /requir/i.test(c.text))))}
   <p class="note">3.1 requirement text is spread over: the architecture chapter's version-requirement list, individual query descriptions (for example <code>CL_DEVICE_MAX_NUM_SUB_GROUPS</code>: "required for an OpenCL 2.1, OpenCL 2.2, or OpenCL 3.1 device") and the extension-name list in the platform layer. Any future "make X required" change has to find all of those — see the 3.2 workbench.</p>
   <h2>Optional features</h2><div class="grid g2">${M.optional.map(f=>`<div class="card"><h3 style="margin-top:0">${esc(f.title)}</h3>
      ${f.macros.length?`<div>${f.macros.map(m=>chip('__'+m,'ratified')).join('')}</div>`:''}
      ${f.queries.length?`<div class="small">${f.queries.map(q=>`<code>${esc(q)}</code>`).join(' ')}</div>`:''}
-     ${f.rows.length?`<table><tbody>${f.rows.map(r=>`<tr><td class="small" style="width:42%"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>`:`<div class="small mute">${esc(f.text.slice(0,420))}</div>`}</div>`).join('')}</div>
+     ${f.withheld ? `<div class="small" style="margin-top:6px">${f.rows.length ? `${f.rows.length} behaviour${f.rows.length===1?'':'s'} when the feature is absent, for: ${apisOf(f).map(x=>`<code>${esc(x)}</code>`).join(' ')}` : 'No per-function table.'}<div class="mute" style="margin-top:4px">The exact wording is in ${appHLink}.</div></div>` : (f.rows.length?`<table><tbody>${f.rows.map(r=>`<tr><td class="small" style="width:42%"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>`:`<div class="small mute">${esc(f.text.slice(0,420))}</div>`)}</div>`).join('')}</div>
   <h2>Which extensions touch which optional feature ${lab('he','heuristic')}</h2>
   <p class="small mute">Keyword counts in each extension's spec text, for extensions that are promoted, ratified or experimental. A high count suggests a promotion would have to say what happens on devices lacking the feature. It is a pointer for reading, not a verdict.</p>
   <div class="scroll"><table><thead><tr><th>Extension</th><th>Status</th>${M.optional_keywords.map(k=>`<th class="heat" title="${esc(k)}" style="writing-mode:vertical-rl;height:120px">${esc(k)}</th>`).join('')}</tr></thead><tbody>
@@ -593,10 +597,10 @@ VIEWS.bench = el => {
     if (STATE.optpick) {
       const f = M.optional.find(x=>x.title===STATE.optpick);
       sec(`Making “${esc(f.title)}” required ${lab('ex','extracted')}`, `<div>Appendix H lists ${f.rows.length} API behaviours that exist only because the feature is optional. For a device claiming the new version these become dead branches (they would still bind older devices):</div>
-        <table><tbody>${f.rows.map(r=>`<tr><td class="small"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>
+        ${f.withheld ? `<div class="small">For: ${apisOf(f).map(x=>`<code>${esc(x)}</code>`).join(' ')}. The wording of each is in ${appHLink}.</div>` : `<table><tbody>${f.rows.map(r=>`<tr><td class="small"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>`}
         ${f.macros.length?`<div>OpenCL C macros that would be unconditionally defined: ${f.macros.map(m=>chip('__'+m,'ratified')).join('')}</div>`:''}
         ${f.queries.length?`<div>Queries that would become constant for such devices: ${f.queries.map(q=>`<code>${esc(q)}</code>`).join(' ')}</div>`:''}
-        <div class="note">Precedent: 3.1 made sub-groups and SPIR-V required without editing appendix H (it is unchanged), and wrote the requirement into query descriptions and the architecture chapter's version list. Where to look: version-literal sites below.</div>`, f.rows.map(r=>`- ${r.api}: ${r.behaviour}`).join('\n'));
+        <div class="note">Precedent: 3.1 made sub-groups and SPIR-V required without editing appendix H (it is unchanged), and wrote the requirement into query descriptions and the architecture chapter's version list. Where to look: version-literal sites below.</div>`, f.rows.map(r=>`- ${r.api}${r.behaviour?': '+r.behaviour:''}`).join('\n'));
     }
     // bump checklist
     const t = M.touch, by = {}; t.sites.forEach(s => by[s.area]=(by[s.area]||0)+1);
@@ -630,7 +634,7 @@ VIEWS.concerns = el => {
   const kinds = [['promote','Promote extensions into core'],['require','Make an optional feature required'],['deprecate','Deprecate']];
   const srcCls = {TESTED:'ex',DERIVED:'de',HEURISTIC:'he',SAMPLE:'he','NOT KNOWABLE':'un'};
   const lvlChip = l => chip(l, l==='high'?'removed':l==='notable'?'deprecated':'');
-  el.innerHTML = `${/^https?:$/.test(location.protocol)?'<div class="note">Want to weigh in? <a href="vote.html">Vote on these directions and concerns</a> (uses GitHub reactions).</div>':''}<p class="small mute">What each hypothetical direction for OpenCL 3.2 would raise, produced by rules over test results and extracted Khronos data. <b>This is evidence for a discussion, not a prediction or a Khronos plan.</b> Levels are rule-based: <b>high</b> = a hard failure, an unfinished (experimental or unratified) extension, or a forced requirement; <b>notable</b> = a large or cross-cutting effect; <b>info</b> = a fact worth knowing.</p>
+  el.innerHTML = `${(/^https?:$/.test(location.protocol)&&M.features&&M.features.voting)?'<div class="note">Want to weigh in? <a href="vote.html">Vote on these directions and concerns</a> (uses GitHub reactions).</div>':''}<p class="small mute">What each hypothetical direction for OpenCL 3.2 would raise, produced by rules over test results and extracted Khronos data. <b>This is evidence for a discussion, not a prediction or a Khronos plan.</b> Levels are rule-based: <b>high</b> = a hard failure, an unfinished (experimental or unratified) extension, or a forced requirement; <b>notable</b> = a large or cross-cutting effect; <b>info</b> = a fact worth knowing.</p>
    ${D.sample?`<div class="card small"><b>Sample device</b> (one device read on the author's machine, not representative): ${esc(D.sample.name)} — SVM <code>${esc(D.sample.svm)}</code>, generic address space <code>${esc(D.sample.generic_address_space)}</code>, pipes <code>${esc(D.sample.pipes)}</code>, device enqueue <code>${esc(D.sample.device_enqueue)}</code>, non-uniform work-groups <code>${esc(D.sample.non_uniform_work_groups)}</code>, work-group collectives <code>${esc(D.sample.work_group_collectives)}</code>.</div>`:''}
    <div class="bar" id="cfilt"><b>Level</b> ${['high','notable','info'].map(l=>`<label><input type="checkbox" data-l="${l}" ${STATE.cl.has(l)?'checked':''}> ${l}</label>`).join(' ')} &nbsp; <b>Source</b> ${['TESTED','DERIVED','HEURISTIC','SAMPLE','NOT KNOWABLE'].map(l=>`<label><input type="checkbox" data-s="${l}" ${STATE.cs.has(l)?'checked':''}> ${l.toLowerCase()}</label>`).join(' ')}</div>
    <div id="cbody"></div>`;

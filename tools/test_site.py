@@ -3,12 +3,13 @@
 
 This is what a static host (GitHub Pages) does, so it catches problems that file:// hides (paths, hash routing).
 """
-import functools, http.server, json, os, re, subprocess, sys, threading, html, urllib.parse
+import functools, http.server, json, os, re, subprocess, sys, threading, html, urllib.parse, urllib.request
 from common import ROOT
 
+voting = "--with-voting" in sys.argv
 site = os.path.join(ROOT, "site")
 assert os.path.exists(os.path.join(site, "index.html")), "run tools/build_site.py first"
-CONC = json.load(open(os.path.join(site, "concerns.json")))
+CONC = json.load(open(os.path.join(site if voting else os.path.join(ROOT, "site-data"), "concerns.json")))
 D0 = CONC["directions"][0]
 ITEM = next(c for c in D0["concerns"] if c["level"] in ("high", "notable") and c["source"] != "NOT KNOWABLE")
 OTHER = next(c for d in CONC["directions"][1:] for c in d["concerns"] if c["level"] in ("high", "notable") and c["source"] != "NOT KNOWABLE")
@@ -21,8 +22,8 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
         b = json.dumps(obj).encode(); self.send_response(code); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
-        if u.path == "/config.json": return self._json(200, {"repo": "owner/repo"})
-        if u.path == "/hidden.json": return self._json(200, {"comments": [777]})
+        if voting and u.path == "/config.json": return self._json(200, {"repo": "owner/repo"})
+        if voting and u.path == "/hidden.json": return self._json(200, {"comments": [777]})
         if u.path.startswith("/fail/"): return self._json(403, {"message": "rate limited"})
         if u.path.startswith("/api/"):
             page = int(urllib.parse.parse_qs(u.query).get("page", ["1"])[0])
@@ -52,16 +53,26 @@ def status(dom):
 def dump(url): return subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--disable-gpu", "--virtual-time-budget=6000", "--dump-dom", url], capture_output=True, text=True, timeout=120).stdout
 try:
     base = "http://127.0.0.1:%d" % port
-    # the vote page against the fake API: real counts shown, a spoofed comment from another user ignored, failure handled
-    page = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/api", safe="")); txt = visible(page)
-    good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote or reply on GitHub" in txt and "unavailable" not in status(page) and "Counts and replies" in status(page)
-    good = good and "@alice-the-reviewer" in txt and "I disagree because the ratified label matters." in txt and "@bob-the-implementer" in txt     # replies shown with the author's GitHub name
-    good = good and "HIDDEN-BY-OWNER-TEXT" not in txt and "troll-account" not in txt                                                            # moderation list honoured
-    good = good and "reply on a spoofed issue" not in txt and ("ID " + ITEM["id"]) in txt                                                       # replies on a non-owner's issue ignored; IDs shown
-    print("%-11s %s" % ("vote page", "ok" if good else "FAIL")); good or bad.append("vote page counts")
-    fpage = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/fail", safe=""))
-    good2 = "unavailable right now" in status(fpage) and D0["title"] in visible(fpage) and "Outcomes so far" not in visible(fpage)
-    print("%-11s %s" % ("vote fail", "ok" if good2 else "FAIL")); good2 or bad.append("vote page failure mode")
+    if voting:
+        # the vote page against the fake API: real counts shown, a spoofed comment from another user ignored, failure handled
+        page = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/api", safe="")); txt = visible(page)
+        good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote or reply on GitHub" in txt and "unavailable" not in status(page) and "Counts and replies" in status(page)
+        good = good and "@alice-the-reviewer" in txt and "I disagree because the ratified label matters." in txt and "@bob-the-implementer" in txt     # replies shown with the author's GitHub name
+        good = good and "HIDDEN-BY-OWNER-TEXT" not in txt and "troll-account" not in txt                                                            # moderation list honoured
+        good = good and "reply on a spoofed issue" not in txt and ("ID " + ITEM["id"]) in txt                                                       # replies on a non-owner's issue ignored; IDs shown
+        print("%-11s %s" % ("vote page", "ok" if good else "FAIL")); good or bad.append("vote page counts")
+        fpage = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/fail", safe=""))
+        good2 = "unavailable right now" in status(fpage) and D0["title"] in visible(fpage) and "Outcomes so far" not in visible(fpage)
+        print("%-11s %s" % ("vote fail", "ok" if good2 else "FAIL")); good2 or bad.append("vote page failure mode")
+    else:                                                          # voting is off: nothing from it may be served
+        for f in ("vote.html", "config.json", "concerns.json", "hidden.json"):
+            import urllib.error
+            try: urllib.request.urlopen(base + "/" + f); code = 200
+            except urllib.error.HTTPError as e: code = e.code
+            print("%-11s %s" % (f, "absent (404) ok" if code == 404 else "FAIL: served (%s)" % code)); code == 404 or bad.append(f + " is still served")
+        idx = dump(base + "/index.html#concerns")                  # the explorer must not link to a vote page that is not there
+        nolink = bool(re.search(r'id="votelink"[^>]*\bhidden', idx)) and "Want to weigh in" not in visible(idx)
+        print("%-11s %s" % ("vote links", "hidden ok" if nolink else "FAIL")); nolink or bad.append("vote link visible while voting is off")
     for name, (frag, needle) in checks.items():
         out = subprocess.run(["chromium", "--headless=new", "--no-sandbox", "--disable-gpu", "--virtual-time-budget=5000", "--dump-dom", "http://127.0.0.1:%d/index.html%s" % (port, frag)],
                              capture_output=True, text=True, timeout=120).stdout

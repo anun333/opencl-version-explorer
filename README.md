@@ -69,13 +69,13 @@ It applies the change, checks the registry (duplicates, unresolved references, e
 
 It tests whether a change is *self-consistent* at the registry and header level. It does not read spec prose, check OpenCL C built-ins or semantics, run conformance tests, build the ICD loader, or know which implementations ship what. A proposal that passes here is consistent, not necessarily a good idea. The 3.2 workbench report is partly rule-based and partly keyword-based; the page says which.
 
-## Hosting it, and the voting page
+## Hosting it
 
-The explorer is one self-contained file, so any static host works. This repository publishes it with GitHub Pages (`.github/workflows/pages.yml`): `index.html` is the explorer and `vote.html` is a companion page where people can weigh in on the hypothetical 3.2 directions and the concerns each raises.
+The explorer is one self-contained file, so any static host works. This repository publishes it with GitHub Pages (`.github/workflows/pages.yml`). `tools/build_site.py` prepares `site/`, `tools/test_site.py` checks it over HTTP, and `docs/publishing-to-github-pages.md` explains the pieces.
 
-**How voting works.** There is no server. Each direction and each concern is a GitHub issue in this repository, created by `tools/seed_votes.py`. A vote is a GitHub reaction on the issue (👍 or 👎), and a comment is a reply, so voters and commenters are people with GitHub accounts, one reaction per person per item. `vote.html` reads counts and replies from the GitHub API in the browser and shows outcomes, with each reply's author name. It only trusts issues written by the repository owner, so stray issues cannot add items, and the owner can hide a reply via `site-data/hidden.json`. It is an informal, unweighted poll; it carries no authority and anyone can react.
+A companion voting page (votes as GitHub reactions on issues, replies as comments) was built and then taken down on 2026-10-03; it is off by default and the doc explains how to switch it back on.
 
-`tools/build_site.py` prepares `site/`, `tools/test_site.py` checks both pages over HTTP (including against a fake GitHub API), and `docs/publishing-to-github-pages.md` explains the pieces. If you fork this, enable Pages (Source: GitHub Actions) and run `python3 tools/seed_votes.py YOU/REPO --site-url https://YOU.github.io/REPO/` once.
+The wording of appendix H of the API specification is deliberately not embedded in the page (its source file states no licence); the Optional features tab shows names and counts and links to the spec.
 
 ## Feedback
 

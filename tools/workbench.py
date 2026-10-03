@@ -467,12 +467,18 @@ def run_proposal(pid, source, title=None, sheet=None):
         base_xml = show(DOCS, "v3.1.2", "xml/cl.xml")
         wd = os.path.join(BUILD, "_apply", pid); os.makedirs(os.path.join(wd, "xml"), exist_ok=True)
         open(os.path.join(wd, "xml", "cl.xml"), "w").write(base_xml)
-        rc, o = sh("git apply --whitespace=nowarn %s" % os.path.abspath(source), cwd=wd)
+        # GIT_CEILING_DIRECTORIES stops git from finding an enclosing repository: inside one, `git apply` silently skips paths and still exits 0
+        _p = subprocess.run(["git", "apply", "--whitespace=nowarn", os.path.abspath(source)], cwd=wd, capture_output=True, text=True, env=dict(os.environ, GIT_CEILING_DIRECTORIES=os.path.dirname(wd)))
+        rc, o = _p.returncode, (_p.stdout + _p.stderr).strip()
         if rc:
             return {"id": pid, "title": title or pid, "intent": "", "asks": [{"type": "proposal", "patch": source}], "provenance": provenance(M),
                     "rules": {"findings": [{"id": "apply", "level": "fail", "text": "patch does not apply to xml/cl.xml at v3.1.2: " + o[:200]}]},
                     "checks": [{"id": "proposal/applies", "title": "patch applies cleanly to the registry", "pass": False, "detail": o.splitlines()[:4]}]}
         prop_xml = open(os.path.join(wd, "xml", "cl.xml")).read()
+        if prop_xml == base_xml:
+            return {"id": pid, "title": title or pid, "intent": "", "asks": [{"type": "proposal", "patch": source}], "provenance": provenance(M),
+                    "rules": {"findings": [{"id": "apply", "level": "fail", "text": "the patch applied but changed nothing in xml/cl.xml (empty patch, or paths that do not match xml/cl.xml)"}]},
+                    "checks": [{"id": "proposal/applies", "title": "patch changes the registry", "pass": False, "detail": ["the registry is identical after applying the patch"]}]}
         origin = "patch `%s` applied to the registry at v3.1.2" % os.path.basename(source)
     out = {"id": pid, "title": title or pid, "intent": "Proposal tested from " + origin + ". Hypothetical; not a Khronos artifact.", "asks": [{"type": "proposal", "patch": source}],
            "provenance": provenance(M), "rules": {"findings": []}, "checks": []}
@@ -982,6 +988,17 @@ if __name__ == "__main__":
                 g2 = {c["id"] for c in rr["checks"] if c["pass"] is False}
                 print("%-26s failed: %s" % ("wizard patch re-tested", sorted(g2) or "none"))
                 if g2: bad.append("wizard patch round trip failed %s" % sorted(g2))
+        # regression: a patch must apply even when the work folder sits inside a git repository (git apply silently skips paths there)
+        probe = os.path.join(BUILD, "_gitrepo_probe"); os.makedirs(probe, exist_ok=True)
+        subprocess.run(["git", "init", "-q", probe], check=True, capture_output=True)
+        _saved = BUILD; BUILD = os.path.join(probe, "build")
+        try:
+            rr = run_proposal("self-apply-in-repo", os.path.join(ROOT, "tools", "proposals", "example-ok.patch"))
+        finally:
+            BUILD = _saved
+        g3 = {c["id"] for c in rr["checks"] if c["pass"] is False}
+        print("%-26s failed: %s" % ("patch applied inside a git repo", sorted(g3) or "none"))
+        if g3 or not rr.get("synthetic", {}).get("names", {}).get("commands"): bad.append("a patch applied nothing when the work folder is inside a git repository (failed %s)" % sorted(g3))
         r = run_proposal("self-noop", "ref:main")
         got = {c["id"] for c in r["checks"] if c["pass"] is False}
         print("%-26s failed: %s" % ("control: main vs main", sorted(got) or "none"))

@@ -8,7 +8,7 @@ name: Publish the explorer to GitHub Pages
 on:
   push:
     branches: [main]
-    paths: [opencl-explorer.html, tools/build_site.py, tools/vote_template.html, site-data/**, .github/workflows/pages.yml]
+    paths: [opencl-explorer.html, tools/build_site.py, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:

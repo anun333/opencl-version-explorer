@@ -198,6 +198,7 @@ def main():
     cj = os.path.join(res_dir, "concerns.json")
     model["concerns"] = clean_paths(json.load(open(cj))) if os.path.exists(cj) else None
     print("results embedded:", len(results), " withheld (wip):", skipped)
+    model["features"] = {"voting": os.environ.get("VOTING") == "1"}      # the voting page is off unless a build asks for it
     model["glossary"] = json.load(open(os.path.join(ROOT, "tools", "glossary.json")))
     # names the Propose tab checks against (all defined names in the latest registry, existing feature macros, example spec)
     import workbench as wb
