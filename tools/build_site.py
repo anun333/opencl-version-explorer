@@ -4,6 +4,7 @@
   index.html     the explorer (one self-contained file)
   vote.html      the companion voting page (reads GitHub reactions)
   concerns.json  the concern lines the vote page shows (snapshot kept in site-data/)
+  hidden.json    ids of reply comments the owner has hidden from the vote page (site-data/hidden.json)
   config.json    which repository the votes live in (from GITHUB_REPOSITORY, or --repo OWNER/NAME)
 
 Links such as index.html#compare?ca=v3.0.19&cb=v3.1.0 work because the view state lives in the URL hash.
@@ -29,6 +30,9 @@ shutil.copy(src, os.path.join(out, "index.html"))
 cj = os.path.join(ROOT, "site-data", "concerns.json")
 assert os.path.exists(cj), "site-data/concerns.json missing (run tools/regen.sh to refresh it)"
 shutil.copy(cj, os.path.join(out, "concerns.json"))
+hj = os.path.join(ROOT, "site-data", "hidden.json")
+if not os.path.exists(hj): json.dump({"comments": []}, open(hj, "w"))
+shutil.copy(hj, os.path.join(out, "hidden.json"))
 vote = open(os.path.join(ROOT, "tools", "vote_template.html")).read()
 assert "/home/" not in vote
 open(os.path.join(out, "vote.html"), "w").write(vote)

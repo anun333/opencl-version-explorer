@@ -22,16 +22,20 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
         if u.path == "/config.json": return self._json(200, {"repo": "owner/repo"})
+        if u.path == "/hidden.json": return self._json(200, {"comments": [777]})
         if u.path.startswith("/fail/"): return self._json(403, {"message": "rate limited"})
         if u.path.startswith("/api/"):
             page = int(urllib.parse.parse_qs(u.query).get("page", ["1"])[0])
             if page > 1: return self._json(200, [])
             if u.path.endswith("/issues"):
-                return self._json(200, [{"html_url": "https://github.com/owner/repo/issues/1", "user": {"login": "owner"}, "body": "<!-- vote-direction: %s -->" % D0["id"], "reactions": {"+1": 3, "-1": 1}}])
-            if u.path.endswith("/issues/comments"):
                 return self._json(200, [
-                    {"html_url": "https://github.com/owner/repo/issues/1#c1", "user": {"login": "owner"}, "body": "<!-- vote-item: %s -->\ntext" % ITEM["id"], "reactions": {"+1": 5, "-1": 0}},
-                    {"html_url": "https://github.com/owner/repo/issues/2#c9", "user": {"login": "someone-else"}, "body": "<!-- vote-item: %s -->\nspoof" % OTHER["id"], "reactions": {"+1": 99, "-1": 0}}])
+                    {"number": 1, "html_url": "https://github.com/owner/repo/issues/1", "user": {"login": "owner"}, "body": "<!-- vote-direction: %s -->" % D0["id"], "reactions": {"+1": 3, "-1": 1}},
+                    {"number": 2, "html_url": "https://github.com/owner/repo/issues/2", "user": {"login": "owner"}, "body": "<!-- vote-item: %s -->" % ITEM["id"], "reactions": {"+1": 5, "-1": 0}},
+                    {"number": 3, "html_url": "https://github.com/owner/repo/issues/3", "user": {"login": "someone-else"}, "body": "<!-- vote-item: %s -->" % OTHER["id"], "reactions": {"+1": 99, "-1": 0}}])
+            if u.path.endswith("/issues/comments"):
+                mk = lambda cid, n, login, body: {"id": cid, "issue_url": "https://api.github.com/repos/owner/repo/issues/%d" % n, "html_url": "https://github.com/owner/repo/issues/%d#issuecomment-%d" % (n, cid), "user": {"login": login}, "body": body, "created_at": "2026-10-03T12:00:00Z"}
+                return self._json(200, [mk(101, 2, "alice-the-reviewer", "I disagree because the ratified label matters."), mk(777, 2, "troll-account", "HIDDEN-BY-OWNER-TEXT"),
+                                        mk(102, 1, "bob-the-implementer", "We would want this explored."), mk(103, 3, "someone-else", "reply on a spoofed issue")])
         return super().do_GET()
 Handler = functools.partial(Quiet, directory=site)
 srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
@@ -50,7 +54,10 @@ try:
     base = "http://127.0.0.1:%d" % port
     # the vote page against the fake API: real counts shown, a spoofed comment from another user ignored, failure handled
     page = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/api", safe="")); txt = visible(page)
-    good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote on GitHub" in txt and "unavailable" not in status(page) and "Counts from GitHub" in status(page)
+    good = ("+5" in txt) and ("+2" in txt) and ("+99" not in txt) and "Outcomes so far" in txt and "vote or reply on GitHub" in txt and "unavailable" not in status(page) and "Counts and replies" in status(page)
+    good = good and "@alice-the-reviewer" in txt and "I disagree because the ratified label matters." in txt and "@bob-the-implementer" in txt     # replies shown with the author's GitHub name
+    good = good and "HIDDEN-BY-OWNER-TEXT" not in txt and "troll-account" not in txt                                                            # moderation list honoured
+    good = good and "reply on a spoofed issue" not in txt and ("ID " + ITEM["id"]) in txt                                                       # replies on a non-owner's issue ignored; IDs shown
     print("%-11s %s" % ("vote page", "ok" if good else "FAIL")); good or bad.append("vote page counts")
     fpage = dump(base + "/vote.html?api=" + urllib.parse.quote(base + "/fail", safe=""))
     good2 = "unavailable right now" in status(fpage) and D0["title"] in visible(fpage) and "Outcomes so far" not in visible(fpage)

@@ -22,6 +22,9 @@ a{color:var(--acc)}button,select{font:inherit;color:var(--ink);background:var(--
 .note{border-left:3px solid var(--line);padding:2px 10px;color:var(--mute);font-size:12px;margin:8px 0}
 footer{max-width:1100px;margin:8px auto 28px;padding:10px 16px 0;color:var(--mute);font-size:12px;border-top:1px solid var(--line)}
 .err{color:var(--bad)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.reply{border-left:3px solid var(--line);padding:2px 10px;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+details.rp summary{cursor:pointer}
 </style>
 </head>
 <body>
@@ -29,12 +32,12 @@ footer{max-width:1100px;margin:8px auto 28px;padding:10px 16px 0;color:var(--mut
 <div class="small mute">A companion to the <a href="index.html">OpenCL Version Explorer</a>. Independent; not from Khronos, and not a Khronos plan.</div></header>
 <main>
 <div class="card">
-  <b>How voting works.</b> Each direction below is a GitHub issue, and each concern is a comment on it. You vote with a <b>GitHub reaction</b> on that issue or comment: open it with the link and click 👍 or 👎. You need a (free) GitHub account; counts here refresh when the page reloads.
+  <b>How voting and replies work.</b> Each direction and each concern below is its own GitHub issue. You vote with a <b>GitHub reaction</b> on the issue (open it with the link and click 👍 or 👎) and you can <b>reply</b> there. You need a (free) GitHub account, so every vote and reply carries a real GitHub name; replies are shown here with that name. Counts and replies refresh when the page reloads.
   <ul class="small" style="margin:6px 0 0 18px">
-    <li>On a <b>direction</b>: 👍 = I would want this explored for a future version; 👎 = I would not.</li>
-    <li>On a <b>concern</b>: 👍 = I agree this is a real concern; 👎 = I don't think so, or I think it is wrong. If you think it is wrong, say why in a reply.</li>
+    <li>On a <b>direction</b>: 👍 = I would want this explored for a future version; 👎 = I would not. Comment to say why.</li>
+    <li>On a <b>concern</b>: 👍 = I agree this is a real concern; 👎 = I don't think so, or I think it is wrong. If you think it is wrong, please reply and say why.</li>
   </ul>
-  <div class="note">This is an informal, unweighted poll. Anyone with a GitHub account can react, one reaction per person per item, and it carries no authority. The concern text is generated from Khronos's public files by <a href="index.html#concerns">the explorer</a>; lines it cannot judge (what is "not knowable") are shown but not voted on.</div>
+  <div class="note">This is an informal, unweighted poll. Anyone with a GitHub account can react or reply, one reaction per person per item, and it carries no authority. Replies are shown as plain text and shortened; the full discussion is on GitHub. Abusive replies can be hidden by the owner without being deleted. The concern text is generated from Khronos's public files by <a href="index.html#concerns">the explorer</a>; lines it cannot judge (what is "not knowable") are shown but not voted on.</div>
 </div>
 <div class="bar"><label>Sort concerns <select id="sort"><option value="order">as generated</option><option value="net">by net votes</option></select></label>
   <label>Show <select id="lvl"><option value="all">high and notable</option><option value="high">high only</option></select></label><span id="status" class="small mute"></span></div>
@@ -47,30 +50,36 @@ footer{max-width:1100px;margin:8px auto 28px;padding:10px 16px 0;color:var(--mut
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const VOTABLE = c => (c.level === 'high' || c.level === 'notable') && c.source !== 'NOT KNOWABLE';
-let DATA = null, CFG = {repo: ''}, LIVE = {issues: {}, items: {}}, ERR = null;
+let DATA = null, CFG = {repo: ''}, HIDDEN = new Set(), LIVE = {dirs: {}, items: {}}, ERR = null;
 function apiBase(){ const q = new URLSearchParams(location.search).get('api'); return (q && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) ? q : 'https://api.github.com'; }
 async function getAll(url){ let out = []; for (let p = 1; p <= 6; p++) { const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'per_page=100&page=' + p, {headers: {Accept: 'application/vnd.github+json'}}); if (!r.ok) throw new Error('GitHub API ' + r.status); const j = await r.json(); out = out.concat(j); if (j.length < 100) break; } return out; }
+const holder = i => ({number: i.number, url: i.html_url, up: i.reactions['+1'], down: i.reactions['-1'], replies: []});
 async function loadVotes(){
   if (!CFG.repo) { ERR = 'This copy of the page is not connected to a repository, so vote counts are not shown.'; return; }
-  const key = 'votes:' + CFG.repo; try { const c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 300000) { LIVE = c.v; return; } } catch(e) {}
+  const key = 'votes2:' + CFG.repo; try { const c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 300000) { LIVE = c.v; return; } } catch(e) {}
   try {
     const base = apiBase() + '/repos/' + CFG.repo, owner = CFG.repo.split('/')[0];
     const [issues, comments] = await Promise.all([getAll(base + '/issues?state=all'), getAll(base + '/issues/comments')]);
-    LIVE = {issues: {}, items: {}};
-    issues.filter(i => !i.pull_request && i.user && i.user.login === owner).forEach(i => { const m = /<!-- vote-direction: ([\w-]+) -->/.exec(i.body || ''); if (m) LIVE.issues[m[1]] = {url: i.html_url, up: i.reactions['+1'], down: i.reactions['-1']}; });
-    comments.filter(c => c.user && c.user.login === owner).forEach(c => { const m = /<!-- vote-item: ([\w-]+) -->/.exec(c.body || ''); if (m) LIVE.items[m[1]] = {url: c.html_url, up: c.reactions['+1'], down: c.reactions['-1']}; });
+    LIVE = {dirs: {}, items: {}}; const byNumber = {};
+    issues.filter(i => !i.pull_request && i.user && i.user.login === owner).forEach(i => {              // only issues written by the owner can define an item
+      const d = /<!-- vote-direction: ([\w-]+) -->/.exec(i.body || ''), m = /<!-- vote-item: ([\w-]+) -->/.exec(i.body || '');
+      if (d) byNumber[i.number] = LIVE.dirs[d[1]] = holder(i); else if (m) byNumber[i.number] = LIVE.items[m[1]] = holder(i); });
+    comments.forEach(c => { const h = byNumber[+String(c.issue_url).split('/').pop()]; if (!h || !c.user || HIDDEN.has(c.id)) return;      // replies: anyone, except those the owner hid
+      h.replies.push({login: c.user.login, url: c.html_url, at: (c.created_at || '').slice(0, 10), body: String(c.body || '').slice(0, 600), owner: c.user.login === owner}); });
     try { sessionStorage.setItem(key, JSON.stringify({t: Date.now(), v: LIVE})); } catch(e) {}
-  } catch (e) { ERR = 'Vote counts are unavailable right now (' + e.message + '; GitHub limits anonymous requests). The links still work for voting; reload in a few minutes for counts.'; }
+  } catch (e) { ERR = 'Vote counts and replies are unavailable right now (' + e.message + '; GitHub limits anonymous requests). The links still work for voting; reload in a few minutes.'; }
 }
 const net = v => v ? v.up - v.down : 0;
-const votes = (v, fallbackUrl) => v ? `<div class="votes"><b>${v.up - v.down >= 0 ? '+' : ''}${v.up - v.down}</b>👍 ${v.up} · 👎 ${v.down}<br><a href="${esc(v.url)}" target="_blank" rel="noopener">vote on GitHub</a></div>` : `<div class="votes small mute">${fallbackUrl ? `<a href="${esc(fallbackUrl)}" target="_blank" rel="noopener">vote on GitHub</a>` : 'not yet open for voting'}</div>`;
+const votes = (v, fallbackUrl) => v ? `<div class="votes"><b>${v.up - v.down >= 0 ? '+' : ''}${v.up - v.down}</b>👍 ${v.up} · 👎 ${v.down}<br><a href="${esc(v.url)}" target="_blank" rel="noopener">vote or reply on GitHub</a></div>` : `<div class="votes small mute">${fallbackUrl ? `<a href="${esc(fallbackUrl)}" target="_blank" rel="noopener">vote on GitHub</a>` : 'not yet open for voting'}</div>`;
+const idLine = (id, v) => `<div class="small mute mono">ID ${esc(id)}${v ? ` · issue #${v.number}` : ''} · <a href="#${esc(id)}" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href.split('#')[0]+'#${esc(id)}')">copy link</a></div>`;
+const replies = v => v && v.replies.length ? `<details class="rp"><summary class="small">${v.replies.length} repl${v.replies.length === 1 ? 'y' : 'ies'}</summary>${v.replies.map(r => `<div class="reply small"><b><a href="https://github.com/${esc(r.login)}" target="_blank" rel="noopener">@${esc(r.login)}</a></b>${r.owner ? ' <span class="chip">author</span>' : ''} <span class="mute">${esc(r.at)}</span> · <a href="${esc(r.url)}" target="_blank" rel="noopener">view</a>\n${esc(r.body)}</div>`).join('')}</details>` : '';
 function draw(){
   const sort = $('#sort').value, lvl = $('#lvl').value, repoUrl = CFG.repo ? 'https://github.com/' + CFG.repo + '/issues' : '';
-  $('#status').textContent = ERR || (CFG.repo ? 'Counts from GitHub reactions on ' + CFG.repo + '.' : '');
+  $('#status').textContent = ERR || (CFG.repo ? 'Counts and replies from GitHub issues in ' + CFG.repo + '.' : '');
   $('#status').className = 'small ' + (ERR ? 'err' : 'mute');
   const all = DATA.directions.flatMap(d => d.concerns.filter(VOTABLE).map(c => ({d, c, v: LIVE.items[c.id]})));
   const voted = all.filter(x => x.v && (x.v.up + x.v.down) > 0);
-  const dirs = DATA.directions.map(d => ({d, v: LIVE.issues[d.id]})).filter(x => x.v && (x.v.up + x.v.down) > 0).sort((a, b) => net(b.v) - net(a.v));
+  const dirs = DATA.directions.map(d => ({d, v: LIVE.dirs[d.id]})).filter(x => x.v && (x.v.up + x.v.down) > 0).sort((a, b) => net(b.v) - net(a.v));
   const top = voted.slice().sort((a, b) => net(b.v) - net(a.v)).slice(0, 5), disputed = voted.filter(x => x.v.up > 0 && x.v.down > 0).sort((a, b) => Math.min(b.v.up, b.v.down) - Math.min(a.v.up, a.v.down)).slice(0, 5);
   $('#summary').innerHTML = voted.length || dirs.length ? `<h2>Outcomes so far</h2><div class="card">
     ${dirs.length ? `<b>Directions by support</b><ol class="small">${dirs.map(x => `<li>${esc(x.d.title)}: ${net(x.v) >= 0 ? '+' : ''}${net(x.v)} (👍 ${x.v.up} · 👎 ${x.v.down})</li>`).join('')}</ol>` : ''}
@@ -81,14 +90,15 @@ function draw(){
     return `<h2>${t}</h2>` + ds.map(d => {
       let cs = d.concerns.filter(VOTABLE).filter(c => lvl === 'all' || c.level === 'high').map(c => ({c, v: LIVE.items[c.id]}));
       if (sort === 'net') cs = cs.sort((a, b) => net(b.v) - net(a.v));
-      const facts = d.concerns.filter(c => !VOTABLE(c));
-      const dv = LIVE.issues[d.id];
-      return `<div class="card"><div class="row" style="border-top:0;padding-top:0"><div><h3>${esc(d.title)}</h3><div class="small mute">${esc(d.intent || '')}</div><div class="small" style="margin-top:4px"><b>Would you want this explored?</b></div></div>${votes(dv, repoUrl)}</div>
-        ${cs.map(({c, v}) => `<div class="row"><div><span class="chip ${c.level}">${c.level}</span><span class="chip">${esc(c.source.toLowerCase())}</span>${esc(c.text)}</div>${votes(v, repoUrl)}</div>`).join('') || '<div class="small mute">No concerns at this filter.</div>'}
+      const facts = d.concerns.filter(c => !VOTABLE(c)), dv = LIVE.dirs[d.id];
+      return `<div class="card" id="${esc(d.id)}"><div class="row" style="border-top:0;padding-top:0"><div><h3>${esc(d.title)}</h3><div class="small mute">${esc(d.intent || '')}</div><div class="small" style="margin-top:4px"><b>Would you want this explored?</b></div>${idLine(d.id, dv)}${replies(dv)}</div>${votes(dv, repoUrl)}</div>
+        ${cs.map(({c, v}) => `<div class="row" id="${esc(c.id)}"><div><span class="chip ${c.level}">${c.level}</span><span class="chip">${esc(c.source.toLowerCase())}</span>${esc(c.text)}${idLine(c.id, v)}${replies(v)}</div>${votes(v, repoUrl)}</div>`).join('') || '<div class="small mute">No concerns at this filter.</div>'}
         ${facts.length ? `<details style="margin-top:6px"><summary class="small mute">${facts.length} facts and unknowns (not voted on)</summary>${facts.map(c => `<div class="small mute" style="padding:3px 0">${esc(c.source.toLowerCase())}: ${esc(c.text)}</div>`).join('')}</details>` : ''}</div>`; }).join(''); }).join('');
+  if (location.hash.length > 1) { const el = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (el) { el.scrollIntoView({block: 'center'}); el.style.outline = '2px solid var(--acc)'; } }
 }
 (async () => {
   try { CFG = await (await fetch('config.json')).json(); } catch(e) {}
+  try { HIDDEN = new Set(((await (await fetch('hidden.json')).json()).comments) || []); } catch(e) {}
   try { DATA = await (await fetch('concerns.json')).json(); } catch(e) { $('#out').innerHTML = '<div class="card err">Could not load concerns.json.</div>'; return; }
   await loadVotes(); draw(); $('#sort').onchange = $('#lvl').onchange = draw;
 })();

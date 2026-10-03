@@ -5,20 +5,24 @@
 - Repository: https://github.com/anun333/opencl-version-explorer (public; free Pages require that)
 - Explorer: https://anun333.github.io/opencl-version-explorer/
 - Voting page: https://anun333.github.io/opencl-version-explorer/vote.html
-- 14 issues ("Direction: ...") and 40 comments, one comment per votable concern, created by `tools/seed_votes.py`.
+- 14 direction issues and 40 concern issues, created by `tools/seed_votes.py`.
 
-## How voting works
+## How voting and replies work
 
-There is no server. A vote is a GitHub reaction (👍 or 👎) on an issue (the direction) or a comment (a concern), so voters are people with GitHub accounts, one reaction per person per item. `vote.html` reads the counts from the GitHub API in the visitor's browser and caches them for five minutes (anonymous API calls are limited to 60 per hour per address). It trusts only issues and comments written by the repository owner and carrying the hidden markers `<!-- vote-direction: ID -->` and `<!-- vote-item: ID -->`, so a stray comment cannot add a line or fake a count.
+There is no server. Each direction is a GitHub issue and **each votable concern is its own issue** (14 directions and 40 concerns, created by `tools/seed_votes.py`). A vote is a GitHub reaction (👍 or 👎) on the issue, so voters are people with GitHub accounts, one reaction per person per item. A **reply** is an ordinary comment on that issue; `vote.html` shows replies under the item with the author's GitHub name (plain text, shortened to 600 characters, with a link to the full comment). It reads issues and comments from the GitHub API in the visitor's browser and caches them for five minutes (anonymous API calls are limited to 60 per hour per address).
+
+It trusts only issues written by the repository owner that carry the hidden markers `<!-- vote-direction: ID -->` or `<!-- vote-item: ID -->`, so a stray issue cannot add a line or fake a count. Anyone may reply; replies on issues that are not items are ignored.
 
 What a vote means: on a direction, 👍 = I would want this explored for a future version; on a concern, 👍 = I agree it is a real concern and 👎 = I do not think so or think it is wrong. It is an informal, unweighted poll with no authority. Reactions are not sybil-resistant: anyone can create accounts.
 
-Line items are identified by a hash of the direction and the concern text. If the data is regenerated and a line's wording changes, it becomes a new item and starts at zero; `seed_votes.py` only adds what is missing and never deletes.
+**Moderation.** To hide a reply from the vote page without deleting it, add its comment ID (the number after `issuecomment-` in its link) to `site-data/hidden.json`, e.g. `{"comments": [123456789]}`, commit and push. You can also delete, minimize or lock comments on GitHub, or block a user.
+
+Line items are identified by a hash of the direction and the concern text, shown on the page next to each item (with a copy-link button). If the data is regenerated and a line's wording changes, it becomes a new item and starts at zero; `seed_votes.py` only adds what is missing and never deletes (except `--migrate`, a one-time clean-up of the first layout).
 
 ## Things to know as the owner
 
-- GitHub emails you about new reactions, comments and issues on your repository. Adjust under Settings, Notifications, or watch settings on the repository.
-- Anyone can comment on the issues. The page ignores comments that are not yours, but the comments still appear on GitHub. You can moderate, lock or delete them there.
+- GitHub emails you about new reactions, comments and issues on your repository (54 issues now exist). Adjust under Settings, Notifications, or watch settings on the repository.
+- Anyone can comment on the issues, and their replies (with their GitHub names) are shown on the vote page unless you hide them. You are the moderator.
 - The page shows anonymous visitors only counts; they vote by following the link to GitHub and signing in.
 
 ## Decisions that were left open
