@@ -1,0 +1,24 @@
+{
+ "id": "s05-subgroup-extras",
+ "title": "Promote the remaining sub-group extensions",
+ "intent": "Language-level extensions with no API symbols; tests how the harness treats a spec/OpenCL C only ask.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_ballot"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_non_uniform_vote"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_non_uniform_arithmetic"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_clustered_reduce"
+  }
+ ],
+ "expect": {}
+}

@@ -1,0 +1,4 @@
+# Source commits this package was built and tested against.  fetch.sh checks these out as "main"
+# in the local bare clones so results are reproducible.  Run ./fetch.sh --latest to follow upstream instead.
+DOCS_COMMIT=219be24fc8947c68ee45b4d25b55a92b8f799f29
+HEADERS_COMMIT=30bc20a8e90468e231d7c639805ae61ad1fefa4f

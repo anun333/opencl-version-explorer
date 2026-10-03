@@ -1,0 +1,52 @@
+{
+ "id": "d03-interop-all-platforms",
+ "title": "Direction: interop including Windows, DirectX and Android handles",
+ "intent": "Everything in d02 plus win32, dx_fence and Android hardware buffer extensions (several are experimental).",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_semaphore"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_opaque_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_sync_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_opaque_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_dma_buf"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_win32"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_win32"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_dx_fence"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_android_hardware_buffer"
+  }
+ ],
+ "expect": {}
+}

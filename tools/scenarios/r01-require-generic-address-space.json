@@ -1,0 +1,12 @@
+{
+ "id": "r01-require-generic-address-space",
+ "title": "Direction: require the generic address space",
+ "intent": "Optional since 3.0.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Generic Address Space"
+  }
+ ],
+ "expect": {}
+}

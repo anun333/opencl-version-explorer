@@ -1,0 +1,12 @@
+{
+ "id": "s06-require-generic-address-space",
+ "title": "Make the generic address space required",
+ "intent": "Optional-feature ask; no header change, so only rule findings apply.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Generic Address Space"
+  }
+ ],
+ "expect": {}
+}

@@ -1,0 +1,20 @@
+{
+ "id": "d01-graph-submission-family",
+ "title": "Direction: the whole command-buffer family",
+ "intent": "Command buffers plus mutable dispatch and multi-device: two of the three are experimental.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer_mutable_dispatch"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer_multi_device"
+  }
+ ],
+ "expect": {}
+}

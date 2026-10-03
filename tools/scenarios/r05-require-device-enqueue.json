@@ -1,0 +1,12 @@
+{
+ "id": "r05-require-device-enqueue",
+ "title": "Direction: require device-side enqueue",
+ "intent": "Optional since 3.0.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Device-Side Enqueue"
+  }
+ ],
+ "expect": {}
+}

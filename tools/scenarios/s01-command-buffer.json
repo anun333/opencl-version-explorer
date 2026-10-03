@@ -1,0 +1,12 @@
+{
+ "id": "s01-command-buffer",
+ "title": "Promote cl_khr_command_buffer alone",
+ "intent": "Smallest realistic graph-submission ask: one ratified extension with API symbols and no extension dependencies.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer"
+  }
+ ],
+ "expect": {}
+}

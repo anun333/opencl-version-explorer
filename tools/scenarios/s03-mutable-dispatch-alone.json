@@ -1,0 +1,15 @@
+{
+ "id": "s03-mutable-dispatch-alone",
+ "title": "Promote mutable dispatch without command buffers",
+ "intent": "Expected to expose a dangling type dependency (core would use types owned by a non-promoted extension).",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer_mutable_dispatch"
+  }
+ ],
+ "expect": {
+  "registry/dangling-types": false,
+  "compile/new-symbols": false
+ }
+}

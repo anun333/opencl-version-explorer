@@ -1,0 +1,12 @@
+{
+ "id": "d05-float-atomics-unratified",
+ "title": "Direction: float atomics (an EXT extension that is not ratified)",
+ "intent": "The largest extension text in the registry, not ratified.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_ext_float_atomics"
+  }
+ ],
+ "expect": {}
+}

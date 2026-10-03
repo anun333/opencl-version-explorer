@@ -1,0 +1,9 @@
+sources/
+site/
+data/
+workbench/build/
+workbench/results/
+workbench/proposals/
+_*.html
+_*.png
+__pycache__/

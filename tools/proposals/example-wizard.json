@@ -1,0 +1,48 @@
+{
+ "id": "example-wizard",
+ "title": "Example: a vendor extension with one query and one command (wizard)",
+ "extension": {
+  "name": "cl_zzdemo_wizard_query",
+  "revision": "0.1.0",
+  "depends": "CL_VERSION_3_0",
+  "condition": "defined(CL_VERSION_3_0)",
+  "experimental": false
+ },
+ "types": [
+  {
+   "name": "cl_demo_flags_zzdemo",
+   "base": "cl_uint"
+  }
+ ],
+ "enums": [
+  {
+   "name": "CL_DEVICE_DEMO_QUERY_ZZDEMO",
+   "value": "0x7F00",
+   "group": "cl_device_info",
+   "vendor": "ZZDemo"
+  }
+ ],
+ "commands": [
+  {
+   "name": "clGetDemoInfoZZDEMO",
+   "ret": "cl_int",
+   "params": [
+    "cl_device_id device",
+    "cl_demo_flags_zzdemo flags",
+    "cl_uint* value_ret"
+   ]
+  }
+ ],
+ "feature": {
+  "title": "Demo optional query",
+  "queries": [
+   "CL_DEVICE_DEMO_QUERY_ZZDEMO"
+  ],
+  "macros": [
+   "__opencl_c_zzdemo"
+  ],
+  "absent": {
+   "clGetDemoInfoZZDEMO": "CL_INVALID_OPERATION"
+  }
+ }
+}

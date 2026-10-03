@@ -1,0 +1,12 @@
+{
+ "id": "d07-unified-svm",
+ "title": "Direction: unified shared virtual memory",
+ "intent": "Experimental, 48 symbols; SVM is optional since 3.0.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_unified_svm"
+  }
+ ],
+ "expect": {}
+}

@@ -1,0 +1,32 @@
+{
+ "id": "r06-2x-parity",
+ "title": "Direction: restore OpenCL 2.x parity",
+ "intent": "Require SVM, generic address space, work-group collectives, non-uniform work-groups, device-side enqueue and pipes together.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Shared Virtual Memory"
+  },
+  {
+   "type": "require",
+   "feature": "Generic Address Space"
+  },
+  {
+   "type": "require",
+   "feature": "Work-group Collective Functions"
+  },
+  {
+   "type": "require",
+   "feature": "Non-Uniform Work-groups"
+  },
+  {
+   "type": "require",
+   "feature": "Device-Side Enqueue"
+  },
+  {
+   "type": "require",
+   "feature": "Pipes"
+  }
+ ],
+ "expect": {}
+}

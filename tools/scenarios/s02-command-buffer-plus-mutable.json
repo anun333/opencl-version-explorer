@@ -1,0 +1,16 @@
+{
+ "id": "s02-command-buffer-plus-mutable",
+ "title": "Promote command buffers and mutable dispatch together",
+ "intent": "Mutable dispatch is experimental and depends on command buffers; tests whether bundling resolves the dependency.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_command_buffer_mutable_dispatch"
+  }
+ ],
+ "expect": {}
+}

@@ -1,0 +1,12 @@
+{
+ "id": "r02-require-svm",
+ "title": "Direction: require shared virtual memory",
+ "intent": "Optional since 3.0.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Shared Virtual Memory"
+  }
+ ],
+ "expect": {}
+}

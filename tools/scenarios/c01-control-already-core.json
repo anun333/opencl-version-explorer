@@ -1,0 +1,15 @@
+{
+ "id": "c01-control-already-core",
+ "title": "CONTROL: re-promote an extension that is already core",
+ "intent": "Must be flagged: its stripped names already exist in core. Identical macro redefinition is legal C, so compiling alone passes; the harness has to catch it through the leak check (symbols already visible at 310) and the name-clash rule.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_device_uuid"
+  }
+ ],
+ "expect": {
+  "compile/no-leak-at-310": false,
+  "rules/no-name-clash": false
+ }
+}

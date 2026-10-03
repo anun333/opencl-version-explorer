@@ -1,0 +1,16 @@
+{
+ "id": "s04-semaphores",
+ "title": "Promote semaphore and external semaphore",
+ "intent": "Two-extension family with an ordering dependency.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_semaphore"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore"
+  }
+ ],
+ "expect": {}
+}

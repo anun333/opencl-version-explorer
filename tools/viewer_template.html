@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenCL Version Explorer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%230b6bcb%27/%3E%3Cpath d=%27M4 8h8M8 4v8%27 stroke=%27white%27 stroke-width=%271.6%27/%3E%3C/svg%3E">
+<style>
+:root{--bg:#fbfbfa;--panel:#fff;--ink:#1d2226;--mute:#5d6870;--line:#dfe3e6;--acc:#0b6bcb;--acc2:#e8f1fb;
+--ok:#1a7f4b;--warn:#a85d00;--bad:#b3261e;--exp:#7a3db8;--chip:#eef1f3;--code:#f3f5f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121517;--panel:#1a1e21;--ink:#e6e9eb;--mute:#97a2a9;--line:#2c3236;--acc:#6db2ff;--acc2:#16283a;--ok:#4cc38a;--warn:#e0a24a;--bad:#ff8a80;--exp:#c39bf0;--chip:#242a2e;--code:#20262a}}
+:root[data-theme=dark]{--bg:#121517;--panel:#1a1e21;--ink:#e6e9eb;--mute:#97a2a9;--line:#2c3236;--acc:#6db2ff;--acc2:#16283a;--ok:#4cc38a;--warn:#e0a24a;--bad:#ff8a80;--exp:#c39bf0;--chip:#242a2e;--code:#20262a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 16px 0;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+h1{font-size:17px;margin:0 0 2px}
+.sub{color:var(--mute);font-size:12px;margin-bottom:8px}
+nav{display:flex;gap:2px;flex-wrap:wrap}
+nav button{border:0;background:none;color:var(--mute);padding:8px 12px;cursor:pointer;font:inherit;border-bottom:2px solid transparent}
+nav button[aria-selected=true]{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+main{padding:16px;max-width:1280px;margin:0 auto}
+h2{font-size:16px;margin:18px 0 8px}h3{font-size:14px;margin:14px 0 6px}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto}
+.kpi b{display:block;font-size:24px}.kpi span{color:var(--mute);font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;position:sticky;top:0;background:var(--panel);cursor:default}
+th.s{cursor:pointer}tr.sel td{background:var(--acc2)}tbody tr.row{cursor:pointer}tbody tr.row:hover td{background:var(--acc2)}
+.chip{display:inline-block;background:var(--chip);border-radius:10px;padding:0 8px;font-size:11px;margin:1px 2px 1px 0;white-space:nowrap}
+.chip.promoted{background:var(--acc2);color:var(--acc)}.chip.ratified{color:var(--ok)}.chip.experimental{color:var(--exp)}.chip.removed,.chip.obsolete{color:var(--bad)}.chip.unratified{color:var(--mute)}
+.chip.added{color:var(--ok)}.chip.deprecated,.chip.required{color:var(--warn)}
+code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+code{background:var(--code);padding:0 4px;border-radius:3px}
+input,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.mute{color:var(--mute)}.small{font-size:12px}
+.tag-ext{display:inline-block;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px;color:var(--mute)}
+.tree{font-size:13px}.tree details{margin-left:14px}.tree summary{cursor:pointer;padding:1px 0}
+.tree .leaf{margin-left:30px;padding:1px 0}
+.split{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px}@media(max-width:900px){.split{grid-template-columns:1fr}}
+.scroll{max-height:70vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.note{border-left:3px solid var(--line);padding:2px 10px;color:var(--mute);font-size:12px;margin:6px 0}
+.lab{font-size:10px;text-transform:uppercase;letter-spacing:.04em;border-radius:3px;padding:0 4px;margin-right:6px;border:1px solid var(--line);color:var(--mute)}
+.lab.ex{color:var(--ok);border-color:var(--ok)}.lab.de{color:var(--acc);border-color:var(--acc)}.lab.he{color:var(--warn);border-color:var(--warn)}.lab.un{color:var(--bad);border-color:var(--bad)}
+.heat{text-align:center;min-width:34px}
+button.act{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+ul.tight{margin:4px 0 4px 18px;padding:0}ul.tight li{margin:2px 0}
+.hide{display:none}
+.plain{border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:8px;padding:6px 12px;margin:0 0 12px;background:var(--panel);font-size:13px}
+.plain summary{cursor:pointer;color:var(--acc);font-weight:600}.plain p{margin:6px 0}
+.gl{border-bottom:1px dotted var(--mute);cursor:help}
+#gpop{position:fixed;z-index:30;max-width:340px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-size:13px}
+#gpop b{display:block;margin-bottom:3px}#gpop .w{color:var(--mute);font-size:12px;margin-top:6px}
+.hl{outline:2px solid var(--acc);border-radius:4px}
+#tour{position:fixed;right:14px;bottom:14px;z-index:25;width:min(380px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--acc);border-radius:10px;padding:12px 14px;box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:13px}
+#tour p{margin:6px 0 10px}#tour button:disabled{opacity:.4}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1>OpenCL Version Explorer</h1><span style="display:flex;gap:8px;align-items:center"><a id="votelink" href="vote.html" hidden style="font-size:12px">Vote on the concerns</a><button id="copylink" class="act" style="font-size:12px;padding:4px 10px">Copy link to this view</button></span></div>
+  <div class="sub" id="stamp"></div>
+  <nav id="nav" role="tablist"></nav>
+</header>
+<main id="main"></main>
+<footer style="max-width:1280px;margin:8px auto 28px;padding:0 16px;color:var(--mute);font-size:12px;border-top:1px solid var(--line);padding-top:10px">
+  Data is derived from the Khronos Group repositories OpenCL-Docs (registry <code>cl.xml</code>: Apache-2.0; specification sources: CC BY 4.0 where the source file says so) and OpenCL-Headers (Apache-2.0), copyright The Khronos Group Inc. It has been extracted, restructured and summarised; views marked heuristic are keyword guesses. This tool is independent and is not affiliated with or endorsed by Khronos. OpenCL is a trademark of Apple Inc. used under license by Khronos. Built with AI assistance; see CREDITS.md and README.md.
+</footer>
+<script id="model" type="application/json">/*__MODEL__*/</script>
+<script>
+"use strict";
+const M = JSON.parse(document.getElementById('model').textContent);
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vkey = v => v.split('.').map(Number);
+const vcmp = (a,b) => { const x=vkey(a), y=vkey(b); for(let i=0;i<3;i++){ const d=(x[i]||0)-(y[i]||0); if(d) return d; } return 0; };
+const T = M.tags, ti = t => T.indexOf(t);
+const EXT = M.extensions, extList = Object.values(EXT);
+const chip = (t, cls='') => `<span class="chip ${cls}">${esc(t)}</span>`;
+const lab = (k, t) => `<span class="lab ${k}" title="${{ex:'read directly from a source file',de:'computed from extracted data by a stated rule',he:'keyword/pattern match, may over- or under-count',un:'cannot be derived from the sources'}[k]}">${t}</span>`;
+const last = T[T.length-1];
+
+// ---------- helpers over the data ----------
+function extStateAt(n, tag){            // registry state of extension n at docs tag (extracted via lifecycle history)
+  const h = EXT[n].hist; let s = null;
+  for (const e of h) { if (ti(e.tag) <= ti(tag)) s = e; }
+  return s && s.present ? s : null;
+}
+function extCountAt(tag){ return extList.filter(e => extStateAt(e.name, tag)).length; }
+function coreSymAddedBetween(a, b){
+  const out = {}; for (const d of M.diffs) if (ti(d.to) > ti(a) && ti(d.to) <= ti(b)) for (const [v, xs] of Object.entries(d.core_symbols_added)) (out[v] ||= []).push(...xs);
+  return out;
+}
+function presentAt(h, tag){ return ti(h.first) <= ti(tag) && ti(h.last) >= ti(tag); }
+// the 3.0 to 3.1 summary is labelled "OpenCL 3.1" in the changelog; v3.1.0 is the first revision that carries it
+const tagOfLabel = l => (l === 'OpenCL 3.1' ? 'v3.1.0' : l);
+const changesFor = label => M.changes.filter(c => c.to === label || (label === 'v3.1.0' && c.to === 'OpenCL 3.1'));
+
+// ---------- tabs ----------
+const TABS = [['help','Start here'],['overview','Overview'],['versions','Versions'],['compare','Compare'],['structure','Structure'],['extensions','Extensions'],['optional','Optional features'],['bench','3.2 workbench'],['propose','Propose'],['concerns','Concerns'],['results','Test results'],['prov','Provenance & traps']];
+const nav = $('#nav'); const main = $('#main');
+TABS.forEach(([id, name]) => { const b = document.createElement('button'); b.textContent = name; b.dataset.id = id; b.setAttribute('role','tab'); b.onclick = () => { if (location.hash !== '#'+id) location.hash = '#'+id; else render(id, null); }; nav.appendChild(b); });
+
+// ---------- routing: the whole view state lives in the URL, so a link reproduces what you see ----------
+let CUR = null, CURQ = new URLSearchParams(), DEFAULTS = {};
+const SPECIAL = new Set(['ext','picks','run','lv','src','spec','t','tour']);
+let TOURI = null;
+function parseHash(h){ h = (h||'').replace(/^#/,''); const i = h.indexOf('?'); return {tab: i<0?h:h.slice(0,i), q: new URLSearchParams(i<0?'':h.slice(i+1))}; }
+function route(){ const {tab, q} = parseHash(location.hash); render(tab in VIEWS ? tab : 'help', q); }
+function captureDefaults(){ DEFAULTS = {}; main.querySelectorAll('input[id],select[id],textarea[id]').forEach(c => DEFAULTS[c.id] = c.type==='checkbox' ? (c.checked?'1':'0') : c.value); }
+function restoreControls(q){
+  for (const [k, v] of q) { if (SPECIAL.has(k)) continue; const c = main.querySelector('#'+CSS.escape(k)); if (!c) continue;
+    if (c.type === 'checkbox') c.checked = (v === '1'); else if (c.tagName === 'SELECT') { if (![...c.options].some(o => o.value === v || o.text === v)) continue; c.value = v; } else c.value = v;
+    c.dispatchEvent(new Event(c.tagName==='SELECT'||c.type==='checkbox' ? 'change' : 'input', {bubbles: true})); }
+}
+function syncHash(){
+  if (!CUR) return; const q = new URLSearchParams();
+  main.querySelectorAll('input[id],select[id],textarea[id]').forEach(c => { if (c.dataset.nolink) return; const v = c.type==='checkbox' ? (c.checked?'1':'0') : c.value; if (String(v) !== String(DEFAULTS[c.id])) q.set(c.id, v); });
+  if (CUR==='extensions' && STATE.ext) q.set('ext', STATE.ext);
+  if (CUR==='bench' && STATE.picks.size) q.set('picks', [...STATE.picks].sort().join(','));
+  if (CUR==='results' && STATE.res) q.set('run', STATE.res);
+  if (CUR==='concerns') { if (STATE.cl.size !== 3) q.set('lv', [...STATE.cl].join(',')); if (STATE.cs.size !== 5) q.set('src', [...STATE.cs].join(',')); }
+  if (CUR==='propose' && STATE.spec) q.set('spec', STATE.spec);
+  if (TOURI !== null) q.set('tour', TOURI);
+  const h = '#' + CUR + (q.toString() ? '?' + q.toString() : '');
+  try { history.replaceState(null, '', h); } catch(e) {}
+}
+function render(id, q){
+  CUR = id; CURQ = q || new URLSearchParams();
+  for (const b of nav.children) b.setAttribute('aria-selected', b.dataset.id === id);
+  if (q) { if (q.has('ext')) STATE.ext = q.get('ext'); if (q.has('picks')) STATE.picks = new Set(q.get('picks').split(',').filter(Boolean)); if (q.has('run')) STATE.res = q.get('run');
+           if (q.has('lv')) STATE.cl = new Set(q.get('lv').split(',')); if (q.has('src')) STATE.cs = new Set(q.get('src').split(',')); if (q.has('spec')) STATE.spec = q.get('spec'); if (q.has('tour')) TOURI = Math.max(0, +q.get('tour') || 0); }
+  main.innerHTML = ''; VIEWS[id](main); addPlain(id); captureDefaults(); if (q) restoreControls(q); annotate(); renderTour(); syncHash(); window.scrollTo(0, 0);
+}
+function show(id){ render(id, null); }
+main.addEventListener('input', syncHash); main.addEventListener('change', syncHash);
+window.addEventListener('hashchange', route);
+if (/^https?:$/.test(location.protocol)) $('#votelink').hidden = false;
+$('#copylink').onclick = () => { syncHash(); const u = location.href; const done = ok => { $('#copylink').textContent = ok ? 'Link copied' : 'Copy failed'; setTimeout(() => $('#copylink').textContent = 'Copy link to this view', 1800); };
+  try { navigator.clipboard.writeText(u).then(() => done(true), () => { prompt('Copy this link', u); done(false); }); } catch(e) { prompt('Copy this link', u); } };
+$('#stamp').textContent = `docs ${last} @ ${M.provenance.docs[last].commit.slice(0,8)} (${M.provenance.docs[last].date}) · headers up to ${M.provenance.headers.at(-1).ref} @ ${M.provenance.headers.at(-1).commit.slice(0,8)} (${M.provenance.headers.at(-1).date})`;
+
+const VIEWS = {};
+
+
+// ---------- plain-language layer: per-tab explanations, glossary tooltips, Start-here ----------
+const PLAIN = {
+ overview: "A summary of how the OpenCL specification has grown. In the first table each row is one version of the core API, and the bar shows how many functions, constants and types that version added. The second table counts extensions by how finished they are. The labels (extracted, derived, heuristic) say how each number was obtained.",
+ versions: "Pick a version, or a numbered revision of the specification, to see what it changed: extensions added or removed, new core symbols, and the specification's own change-log entries for it.",
+ compare: "Pick two revisions of the specification to see everything that differs between them: extensions, new symbols, sections, function pages and change-log entries.",
+ structure: "The outline of the specification, with the revisions each section appeared in. Switch to API reference pages to see each function's own page and where it sits.",
+ extensions: "Every extension in the registry. Click one to see its history, what it depends on, what depends on it, and the symbols it adds. Status shows how finished it is.",
+ optional: "Since OpenCL 3.0 many features are optional. This tab shows, for each one, how a program detects it and what each function does when the feature is missing. The table at the bottom shows which extensions talk about which optional feature (a keyword count, so a pointer only).",
+ bench: "A what-if tool. Tick extensions you imagine moving into the core of a future version, or choose an optional feature to make required, and it lists what that would involve using what the last version did as precedent. This is not a Khronos plan; no 3.2 exists.",
+ concerns: "What each what-if direction would raise as concerns, each line tagged by how it was found. Use the filters to hide the less certain kinds.",
+ results: "Stored runs of the test back end: hypothetical headers compiled with a real compiler, and checks of the registry. A failed check is information, not a verdict.",
+ prov: "Where every number comes from (the exact versions of the Khronos files), where the registry and the headers disagree, and the mistakes made while building this tool.",
+ propose: "Describe an extension you are considering. The page checks what it can immediately, then gives you a file to run through the full test (compile, official header generator, optional-feature pairing) on your own machine."
+};
+function addPlain(id){
+  const t = PLAIN[id]; if (!t) return;
+  let closed = false; try { closed = localStorage.getItem('plain-closed') === '1'; } catch(e) {}
+  const d = document.createElement('details'); d.className = 'plain'; if (!closed) d.open = true;
+  d.innerHTML = `<summary>In plain words</summary><p>${esc(t)}</p><p class="small mute">Unfamiliar word? Terms with a dotted underline explain themselves when clicked, and <a href="#help">Start here</a> has the full glossary.</p>`;
+  d.addEventListener('toggle', () => { try { localStorage.setItem('plain-closed', d.open ? '0' : '1'); } catch(e) {} });
+  main.insertBefore(d, main.firstChild);
+}
+const GL = (M.glossary || []);
+const GL_SKIP = new Set(['OpenCL','Khronos','API','device','driver','platform','core','header','query','extracted','derived','heuristic','sample','not knowable','kernel','specification','registry','extension','profile']);
+const GL_MAP = new Map();
+GL.forEach(e => { if (GL_SKIP.has(e.term)) return; [e.term, ...(e.aliases||[])].forEach(a => { if (a.length > 2) GL_MAP.set(a.toLowerCase(), {e, alias: a}); }); });
+const GL_RE = (() => { const names = [...GL_MAP.keys()].sort((a,b) => b.length - a.length).map(n => n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  return names.length ? new RegExp('(?<![\\w-])(' + names.join('|') + ')(?![\\w-])', 'gi') : null; })();
+const GL_CAP = 2;                      // annotate at most this many occurrences of each term per view
+let annotating = false;
+function annotate(){
+  if (!GL_RE || annotating) return; annotating = true;
+  try {
+    const counts = {}; main.querySelectorAll('.gl').forEach(g => counts[g.dataset.k] = (counts[g.dataset.k]||0) + 1);
+    const w = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, { acceptNode: n => (n.nodeValue.trim().length > 2 && !n.parentElement.closest('code,pre,a,button,select,option,input,textarea,summary,.gl,.lab,.mono,h1,h2,h3,th,script,style,#gpop')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT });
+    const nodes = []; while (w.nextNode()) nodes.push(w.currentNode);
+    for (const n of nodes) {
+      const txt = n.nodeValue; GL_RE.lastIndex = 0; let m, last = 0, frag = null;
+      while ((m = GL_RE.exec(txt))) {
+        const hit = GL_MAP.get(m[1].toLowerCase()); if (!hit) continue; const e = hit.e;
+        // an upper-case alias (ICD, SVM, SPIR-V, CL_TARGET_OPENCL_VERSION) must match exactly; other aliases match any case
+        if (hit.alias === hit.alias.toUpperCase() && /[A-Z]/.test(hit.alias) && m[1] !== hit.alias) continue;
+        if ((counts[e.term] = (counts[e.term]||0) + 1) > GL_CAP) continue;
+        frag = frag || document.createDocumentFragment();
+        frag.append(txt.slice(last, m.index)); const sp = document.createElement('span'); sp.className = 'gl'; sp.dataset.k = e.term; sp.title = e.plain; sp.textContent = m[1]; frag.append(sp); last = m.index + m[1].length;
+      }
+      if (frag) { frag.append(txt.slice(last)); n.replaceWith(frag); }
+    }
+  } finally { annotating = false; }
+}
+new MutationObserver(() => { if (!annotating) { clearTimeout(annotate.t); annotate.t = setTimeout(annotate, 30); } }).observe(main, {childList: true, subtree: true});
+main.addEventListener('click', ev => {
+  const g = ev.target.closest && ev.target.closest('.gl'); const old = $('#gpop'); if (old) old.remove(); if (!g) return;
+  const e = GL.find(x => x.term === g.dataset.k); if (!e) return; const r = g.getBoundingClientRect();
+  const pop = document.createElement('div'); pop.id = 'gpop';
+  pop.innerHTML = `<b>${esc(e.term)}</b>${esc(e.plain)}${e.where?`<div class="w">Where to verify: ${esc(e.where)}</div>`:''}<div class="w"><a href="#help?t=${encodeURIComponent(e.term)}">More in Start here</a></div>`;
+  pop.style.left = Math.min(r.left, window.innerWidth - 360) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; document.body.append(pop); ev.stopPropagation();
+});
+document.addEventListener('click', ev => { const p = $('#gpop'); if (p && !ev.target.closest('#gpop') && !ev.target.closest('.gl')) p.remove(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { const p = $('#gpop'); if (p) p.remove(); } });
+
+
+// ---------- Propose: describe an extension, check it, export it ----------
+const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = t => JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
+const NM = M.names || {enum:[],command:[],type:[],ext:[],macro:[],groups:[]};
+const NSET = k => (NSET[k] ||= new Set(NM[k]));
+const WRE = {extension:/^cl_[a-z0-9]+_[a-z0-9_]+$/, enum:/^CL_[A-Z0-9_]+$/, command:/^cl[A-Z][A-Za-z0-9_]+$/, type:/^cl_[a-z0-9_]+$/, macro:/^__opencl_c_[a-z0-9_]+$/, param:/^(const\s+)?[A-Za-z_]\w*\s*\*{0,}\s*[A-Za-z_]\w*$/, ret:/^(const\s+)?[A-Za-z_]\w*\s*\*{0,}$/};
+const ERRS = NM.enum.filter(n => /^CL_(INVALID_|OUT_OF_|DEVICE_NOT_)/.test(n));
+const BLANK = () => ({id:'my-proposal', title:'', extension:{name:'', revision:'0.1.0', depends:'CL_VERSION_3_0', extra:'', hide:true, experimental:true}, types:[], enums:[], commands:[], feature:{title:'', query:'', macro:'', absent:{}}});
+function specToBackend(W){
+  const e = W.extension, dep = [e.depends, ...(e.extra||'').split(/[\s,+]+/).filter(Boolean)].filter(Boolean).join('+');
+  const m = /^CL_VERSION_(\d)_(\d)$/.exec(e.depends||'');
+  const out = {id: W.id, title: W.title || W.id, extension: Object.assign({name:e.name, revision:e.revision, experimental: !!e.experimental}, dep ? {depends: dep} : {}, (m && e.hide) ? {condition: `defined(${e.depends})`} : {}),
+    types: W.types.map(t => (t.kind === 'struct' ? {name:t.name, members:(t.members||'').split('\n').map(x=>x.trim()).filter(Boolean)} : {name:t.name, base:t.base || 'cl_uint'})), enums: W.enums.map(x => ({name:x.name, value:x.value, group:x.group, vendor:x.vendor||''})),
+    commands: W.commands.map(c => ({name:c.name, ret:c.ret, params: (c.params||'').split('\n').map(x=>x.trim()).filter(Boolean)}))};
+  const f = W.feature;
+  if (f.query || f.macro || Object.keys(f.absent||{}).length) out.feature = {title: f.title || e.name, queries: f.query ? [f.query] : [], macros: f.macro ? [f.macro] : [], absent: W.commands.reduce((a,c) => (f.absent && f.absent[c.name] ? (a[c.name] = f.absent[c.name], a) : a), {})};
+  return out;
+}
+function specChecks(W){
+  const R = [], ok = (id,t) => R.push({lv:'ok',t}), bad = (t) => R.push({lv:'fail',t}), note = (t) => R.push({lv:'info',t});
+  const e = W.extension, S = specToBackend(W);
+  if (!WRE.extension.test(e.name)) bad(`Extension name "${e.name}" must look like cl_<author>_<name>, lower case (for example cl_acme_fast_copy).`); else if (NSET('ext').has(e.name)) bad(`An extension called ${e.name} already exists.`); else ok('', 'Extension name is well-formed and free.');
+  if (!/^\d+\.\d+\.\d+$/.test(e.revision)) bad('Revision must be major.minor.patch, such as 0.1.0. Khronos\'s header generator refuses anything else.'); else ok('', 'Revision format is accepted by the header generator.');
+  const nm = [];
+  W.types.forEach(t => { if (!WRE.type.test(t.name)) bad(`Type name "${t.name}" must look like cl_<name>.`); else if (NSET('type').has(t.name)) bad(`Type ${t.name} already exists.`); nm.push(t.name);
+    if (t.kind === 'struct') { const ms = (t.members||'').split('\n').map(x=>x.trim()).filter(Boolean); if (!ms.length) bad(`Structure ${t.name} needs at least one member, one per line, like "cl_uint count".`);
+      ms.forEach(m => { if (!WRE.param.test(m)) bad(`Structure ${t.name}: member "${m}" must look like "cl_uint count" or "const void* data".`); });
+      const mn = ms.map(m => (/([A-Za-z_]\w*)$/.exec(m)||[])[1]).filter(Boolean); const dm = mn.filter((n,i) => mn.indexOf(n) !== i); if (dm.length) bad(`Structure ${t.name}: member name ${[...new Set(dm)].join(', ')} is used twice.`); } });
+  { const st = W.types.filter(t => t.kind === 'struct'), names = new Set(st.map(t => t.name)); const uses = {}; st.forEach(t => uses[t.name] = new Set((t.members||'').split('\n').map(x=>x.trim()).filter(Boolean).map(m => (/^(?:const\s+)?([A-Za-z_]\w*)/.exec(m)||[])[1]).filter(n => names.has(n))));
+    const done = new Set(); let todo = [...names], progress = true; while (todo.length && progress) { progress = false; todo = todo.filter(n => { if ([...uses[n]].every(u => done.has(u))) { done.add(n); progress = true; return false; } return true; }); }
+    if (todo.length) bad(`Structures ${todo.join(', ')} use each other in a circle; a structure can only use structures defined before it.`); else if (st.length) note('Types are put in a safe order for you: whole-number types first, then structures after any structure they use. (In a registry file written by hand, that order is your job: a type must be listed before a structure that uses it.)'); }
+  W.enums.forEach(x => { if (!WRE.enum.test(x.name)) bad(`Constant "${x.name}" must be upper case and start with CL_.`); else if (NSET('enum').has(x.name)) bad(`Constant ${x.name} already exists.`);
+    if (!/^(0x[0-9A-Fa-f]+|\d+|\(1 << \d+\))$/.test(String(x.value))) bad(`Constant ${x.name}: value "${x.value}" must be hex like 0x1234, a number, or (1 << 3).`); if (!x.group) bad(`Constant ${x.name} needs a group (for example cl_device_info).`); nm.push(x.name); });
+  W.commands.forEach(c => { if (!WRE.command.test(c.name)) bad(`Function "${c.name}" must look like clDoSomething.`); else if (NSET('command').has(c.name)) bad(`Function ${c.name} already exists.`);
+    if (!WRE.ret.test(c.ret||'')) bad(`Function ${c.name}: return type "${c.ret}" not understood.`);
+    (c.params||'').split('\n').map(x=>x.trim()).filter(Boolean).forEach(p => { if (!WRE.param.test(p)) bad(`Function ${c.name}: parameter "${p}" must look like "cl_uint count" or "const cl_mem* buffers".`); }); nm.push(c.name); });
+  const dups = nm.filter((n,i) => n && nm.indexOf(n) !== i); if (dups.length) bad(`Listed twice: ${[...new Set(dups)].join(', ')}.`);
+  if (!W.types.length && !W.enums.length && !W.commands.length) note('Add at least one constant or function to have something to test.');
+  const f = W.feature;
+  if (f.query) { if (!W.enums.some(x => x.name === f.query)) bad(`The detection query ${f.query} must be one of your constants.`); else { const g = (W.enums.find(x => x.name === f.query)||{}).group||''; if (!/_info$/.test(g) && !['cl_device_info','cl_platform_info'].includes(g)) bad(`The detection query ${f.query} is in group "${g}"; queries live in an *_info group such as cl_device_info.`); else ok('', 'Detection query is one of your constants, in a query group.'); } }
+  else if (W.commands.length || W.enums.length) note('No detection query chosen. Since OpenCL 3.0 every optional feature is paired with a query so programs can ask a device whether it supports it.');
+  if (f.macro) { if (!WRE.macro.test(f.macro)) bad(`The OpenCL C feature macro must look like __opencl_c_<name>, lower case.`); else if (NSET('macro').has(f.macro)) bad(`The macro ${f.macro} already exists in the specs.`); else ok('', 'Feature macro name is free and well-formed.'); }
+  W.commands.forEach(c => { const a = (f.absent||{})[c.name]; if (!a) bad(`${c.name}: say what it returns on a device that lacks the feature (appendix H does this for every optional feature).`); else if (!NSET('enum').has(a)) bad(`${c.name}: ${a} is not a defined error code.`); });
+  if (W.commands.length && W.commands.every(c => (f.absent||{})[c.name] && NSET('enum').has(f.absent[c.name]))) ok('', 'Every function says what it returns when the feature is absent.');
+  const fails = R.filter(x => x.lv === 'fail').length;
+  note(fails ? `${fails} problem(s) above would stop the local test from building the proposal.` : 'Nothing here would stop the local test from building the proposal. The compile, official-generator and gating checks run only locally.');
+  return {R, S, fails};
+}
+VIEWS.propose = el => {
+  const pwq = sel => el.querySelector(sel);
+  let W = BLANK(); const sp = CURQ.get('spec') || STATE.spec;
+  if (sp) { try { const o = b64d(sp); W = Object.assign(BLANK(), o.W || o); } catch(e) {} }
+  const setPath = (path, v) => { const ks = path.split('.'); let o = W; ks.slice(0,-1).forEach(k => o = o[k]); const last = ks.at(-1); if (typeof v === 'boolean') o[last] = v; else o[last] = v; };
+  const inp = (path, val, ph, w) => `<input data-k="${esc(path)}" data-nolink="1" value="${esc(val||'')}" placeholder="${esc(ph||'')}" style="width:${w||150}px">`;
+  const sel = (path, val, opts, blank) => `<select data-k="${esc(path)}" data-nolink="1">${blank?'<option value=""></option>':''}${opts.map(o => `<option ${o===val?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  const draw = () => {
+    const e = W.extension, cmdNames = W.commands.map(c=>c.name).filter(Boolean), enumNames = W.enums.map(x=>x.name).filter(Boolean);
+    pwq('#wform').innerHTML = `
+     <div class="card"><h3 style="margin-top:0">1. The extension</h3><div class="small mute">An extension is an optional add-on with its own name. Names are lower case: cl_&lt;who&gt;_&lt;what&gt;.</div>
+       <div class="bar"><label>File name for this proposal ${inp('id',W.id,'my-proposal',140)}</label><label>Extension name ${inp('extension.name',e.name,'cl_acme_fast_copy',230)}</label><label>Revision ${inp('extension.revision',e.revision,'0.1.0',70)}</label></div>
+       <div class="bar"><label>Needs OpenCL at least ${sel('extension.depends', e.depends, ['CL_VERSION_1_2','CL_VERSION_2_0','CL_VERSION_3_0','CL_VERSION_3_1'])}</label><label>Other extensions it needs ${inp('extension.extra',e.extra,'cl_khr_semaphore',180)}</label>
+       <label><input type="checkbox" data-k="extension.hide" data-nolink="1" ${e.hide?'checked':''}> hide it on older targets</label><label><input type="checkbox" data-k="extension.experimental" data-nolink="1" ${e.experimental?'checked':''}> experimental (may change)</label></div></div>
+     <div class="card"><h3 style="margin-top:0">2. New types</h3><div class="small mute">A <i>scalar</i> is a named whole-number type, for example a set of flags. A <i>struct</i> groups several values; list its members one per line, like <code>cl_uint count</code>.</div>
+       ${W.types.map((t,i)=>`<div class="bar">${inp(`types.${i}.name`,t.name,'cl_acme_flags',220)} ${sel(`types.${i}.kind`,t.kind||'scalar',['scalar','struct'])} ${(t.kind==='struct')?'':sel(`types.${i}.base`,t.base,['cl_uint','cl_bitfield','cl_ulong','cl_int','cl_bool'])} <button data-del="types.${i}">remove</button></div>${(t.kind==='struct')?`<textarea data-k="types.${i}.members" data-nolink="1" rows="3" style="width:100%;font:12px ui-monospace,monospace" placeholder="cl_uint count">${esc(t.members||'')}</textarea>`:''}`).join('')}
+       <button data-add="types">+ add a type</button></div>
+     <div class="card"><h3 style="margin-top:0">3. New constants</h3><div class="small mute">A constant is a named number, such as the code used to ask a device a question. Pick the group it belongs to; the value must be one you have been assigned.</div>
+       ${W.enums.map((x,i)=>`<div class="bar">${inp(`enums.${i}.name`,x.name,'CL_DEVICE_ACME_QUERY',250)} ${inp(`enums.${i}.value`,x.value,'0x7F00',80)} ${sel(`enums.${i}.group`,x.group,NM.groups,true)} ${inp(`enums.${i}.vendor`,x.vendor,'vendor',90)} <button data-del="enums.${i}">remove</button></div>`).join('')}
+       <button data-add="enums">+ add a constant</button></div>
+     <div class="card"><h3 style="margin-top:0">4. New functions</h3><div class="small mute">One parameter per line, like <code>cl_device_id device</code> or <code>const cl_mem* buffers</code>.</div>
+       ${W.commands.map((c,i)=>`<div style="margin:6px 0;border-top:1px solid var(--line);padding-top:6px"><div class="bar">${inp(`commands.${i}.name`,c.name,'clDoAcmeThing',230)} returns ${inp(`commands.${i}.ret`,c.ret,'cl_int',90)} <button data-del="commands.${i}">remove</button></div><textarea data-k="commands.${i}.params" data-nolink="1" rows="3" style="width:100%;font:12px ui-monospace,monospace" placeholder="cl_device_id device">${esc(c.params||'')}</textarea></div>`).join('')}
+       <button data-add="commands">+ add a function</button></div>
+     <div class="card"><h3 style="margin-top:0">5. Making it an optional feature</h3><div class="small mute">Since OpenCL 3.0 an optional feature comes with: a question a program can ask (the detection query), a name the OpenCL C compiler defines (if it adds language features), and a defined result for each function when the device lacks the feature.</div>
+       <div class="bar"><label>Feature title ${inp('feature.title',W.feature.title,'Acme fast copy',200)}</label><label>Detection query ${sel('feature.query',W.feature.query,enumNames,true)}</label><label>OpenCL C macro ${inp('feature.macro',W.feature.macro,'__opencl_c_acme',170)}</label></div>
+       ${cmdNames.map(n=>`<div class="bar"><code>${esc(n)}</code> returns when the feature is absent: ${sel(`feature.absent.${n}`,(W.feature.absent||{})[n],ERRS,true)}</div>`).join('')}</div>`;
+    out();
+  };
+  const out = () => {
+    const {R, S, fails} = specChecks(W), json = JSON.stringify(S, null, 1);
+    STATE.spec = b64e({W}); syncHash();
+    pwq('#wcheck').innerHTML = R.map(x => `<div style="margin:3px 0">${x.lv==='ok'?chip('ok','ratified'):x.lv==='fail'?chip('problem','removed'):chip('note')} ${esc(x.t)}</div>`).join('');
+    pwq('#wjson').value = json; pwq('#wcmd').textContent = `python3 tools/workbench.py wizard ${S.id || 'my-proposal'}.json`;
+  };
+  el.innerHTML = `<div id="pw"><div class="split"><div id="wform"></div><div style="position:sticky;top:96px;align-self:start"><div class="card"><b>Checks you can see right now</b> ${lab('de','derived')}<div id="wcheck" class="small" style="margin-top:6px"></div></div>
+    <div class="card" style="margin-top:12px"><b>Your proposal as a file</b><div class="small mute">Save it, then run the full test on your own machine. The test compiles hypothetical headers, runs Khronos's own header generator and checks the optional-feature pairing. It also writes a patch you can attach to an issue.</div>
+    <textarea id="wjson" readonly rows="10" style="width:100%;font:11px ui-monospace,monospace;margin-top:6px" data-nolink="1"></textarea>
+    <div class="bar"><button class="act" id="wdl">Download proposal.json</button><button id="wcp">Copy JSON</button><button id="wex">Load an example</button><button id="wcl">Clear</button></div>
+    <div class="small mute">Then run: <code id="wcmd"></code></div></div></div></div></div>`;
+  const pw = el.querySelector('#pw');
+  pw.addEventListener('input', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (!k) return; setPath(k, ev.target.type === 'checkbox' ? ev.target.checked : ev.target.value); if (/^feature\.absent\./.test(k) && !ev.target.value) { const n = k.split('.').slice(2).join('.'); delete W.feature.absent[n]; } out(); });
+  pw.addEventListener('change', ev => { const k = ev.target.dataset && ev.target.dataset.k; if (k && ev.target.tagName === 'SELECT') { setPath(k, ev.target.value); if (/^(enums|commands|feature\.query)|^types\.\d+\.kind$/.test(k)) draw(); else out(); } });
+  pw.addEventListener('click', ev => {
+    const a = ev.target.dataset && ev.target.dataset.add, d = ev.target.dataset && ev.target.dataset.del;
+    if (a) { W[a].push(a==='types' ? {name:'',kind:'scalar',base:'cl_uint',members:''} : a==='enums' ? {name:'',value:'',group:'cl_device_info',vendor:''} : {name:'',ret:'cl_int',params:''}); draw(); }
+    if (d) { const [k, i] = d.split('.'); const gone = W[k][+i]; W[k].splice(+i, 1); if (k === 'commands' && gone) delete W.feature.absent[gone.name]; draw(); }
+  });
+  $('#wdl', el).onclick = () => { const b = new Blob([pwq('#wjson').value], {type:'application/json'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = (W.id || 'proposal') + '.json'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 500); };
+  $('#wcp', el).onclick = () => { try { navigator.clipboard.writeText(pwq('#wjson').value); $('#wcp', el).textContent = 'Copied'; setTimeout(() => $('#wcp', el).textContent = 'Copy JSON', 1500); } catch(e) {} };
+  $('#wex', el).onclick = () => { W = Object.assign(BLANK(), JSON.parse(JSON.stringify(M.example_spec || {}))); const ex = M.example_spec; if (ex) { W.id = ex.id; W.title = ex.title; W.extension = {name:ex.extension.name, revision:ex.extension.revision, depends:ex.extension.depends||'CL_VERSION_3_0', extra:'', hide:!!ex.extension.condition, experimental:!!ex.extension.experimental}; W.types = ex.types.map(t => t.members ? {name:t.name, kind:'struct', base:'cl_uint', members:t.members.join('\n')} : {name:t.name, kind:'scalar', base:t.base, members:''}); W.enums = ex.enums; W.commands = ex.commands.map(c => ({name:c.name, ret:c.ret, params:c.params.join('\n')})); W.feature = {title:ex.feature.title, query:(ex.feature.queries||[''])[0], macro:(ex.feature.macros||[''])[0], absent:ex.feature.absent}; } draw(); };
+  $('#wcl', el).onclick = () => { W = BLANK(); draw(); };
+  draw();
+};
+
+
+// ---------- guided tour: every number in it is computed from the embedded data ----------
+function rangeDiff(a, b){
+  let added = 0, moved = 0; for (const e of extList) { const sa = extStateAt(e.name, a), sb = extStateAt(e.name, b); if (!sa && sb) added++; else if (sa && sb && ['revision','ratified','experimental','promotedto','obsoletedby'].some(k => sa[k] !== sb[k])) moved++; }
+  return {added, moved, core: Object.values(coreSymAddedBetween(a, b)).flat().length};
+}
+const TOUR = [
+ {tab:'overview', hash:'#overview', title:'How the specification grew', text: () => `The registry covers ${M.core.length} core versions (OpenCL ${M.core[0].version} to ${M.core.at(-1).version}) and ${extList.filter(e => e.present).length} extensions. Core is what every device of a version must have; an extension is an optional add-on. The table shows how many functions, constants and types each version added.`},
+ {tab:'compare', hash:'#compare?ca=v3.0.19&cb=v3.1.0', title:'What changed between two releases', text: () => { const d = rangeDiff('v3.0.19','v3.1.0'); return `From v3.0.19 to v3.1.0: ${d.added} extensions added, ${d.moved} changed status or revision, ${d.core} core symbols added. Change the From and To boxes to compare any two revisions; everything below them follows.`; }},
+ {tab:'optional', hash:'#optional', title:'What OpenCL 3.0 made optional', text: () => `${M.optional.length} features that earlier versions required became optional in 3.0. Each card shows how a program detects the feature and what happens when it is missing. Between 3.0.19 and 3.1.2 this appendix ${M.optional.every(f => !f.changed_since_3_0_19) ? 'did not change' : 'changed'}; the requirements 3.1 added are written elsewhere (see the top of the tab).`},
+ {tab:'bench', hash:'#bench?picks=cl_khr_command_buffer', title:'Try an idea', text: () => { const r = (M.results||[]).find(x => x.kind === 'scenario' && x.asks.length === 1 && x.asks[0].ext === 'cl_khr_command_buffer'); return `Command buffers are ticked here. The report lists what it depends on, what its names would become, and what OpenCL 3.1 did with similar extensions.${r ? ` A stored test of exactly this idea passed ${r.checks.filter(c => c.pass === true).length} checks and failed ${r.checks.filter(c => c.pass === false).length}.` : ''} This is a what-if, not a plan.`; }},
+ {tab:'concerns', hash:'#concerns?lv=high', title:'What would worry people', text: () => { const D = M.concerns; if (!D) return 'Concerns are not in this build.'; const n = D.directions.flatMap(d => d.concerns).filter(c => c.level === 'high').length; return `${n} high-level concerns across ${D.directions.length} directions: unfinished extensions, forced requirements, failed tests. Each line says how it was found (tested, derived, heuristic, sample, or not knowable).`; }},
+ {tab:'propose', hash:'#propose', title:'Test your own idea', text: () => `Describe an extension in the form. The page checks it as you type. Then download the file and run the full test on your own machine: it compiles hypothetical headers with a real compiler and runs Khronos's own header generator.`},
+ {tab:'help', hash:'#help', title:'Share what you see', text: () => `Every view has its own address. Press "Copy link to this view" at the top right and send it; whoever opens it sees exactly your tab, choices and selection. Terms with a dotted underline explain themselves when clicked, and this page keeps the full glossary.`}
+];
+function tourGo(i){ if (i < 0 || i >= TOUR.length) { tourClose(); return; } TOURI = i; const {tab, q} = parseHash(TOUR[i].hash); q.set('tour', i); try { history.replaceState(null, '', '#' + tab + '?' + q.toString()); } catch(e) {} route(); }
+function tourClose(){ TOURI = null; const c = $('#tour'); if (c) c.remove(); syncHash(); }
+function renderTour(){
+  const old = $('#tour'); if (old) old.remove(); if (TOURI === null) return;
+  if (TOURI >= TOUR.length) { TOURI = null; return; }
+  const st = TOUR[TOURI], c = document.createElement('div'); c.id = 'tour';
+  c.innerHTML = `<div class="small mute">Tour · step ${TOURI + 1} of ${TOUR.length}</div><b>${esc(st.title)}</b><p>${esc(st.text())}</p><div class="bar" style="margin:0"><button id="tback" ${TOURI === 0 ? 'disabled' : ''}>Back</button><button class="act" id="tnext">${TOURI === TOUR.length - 1 ? 'Finish' : 'Next'}</button><button id="tclose">Close</button></div>`;
+  document.body.append(c);
+  $('#tback').onclick = () => tourGo(TOURI - 1); $('#tnext').onclick = () => tourGo(TOURI + 1); $('#tclose').onclick = tourClose;
+}
+
+VIEWS.help = el => {
+  const tabs = TABS.filter(([id]) => id !== 'help');
+  el.innerHTML = `<div class="bar" style="margin-top:0"><button class="act" id="tourbtn">Take the 2-minute tour</button><span class="small mute">Seven short steps through the main tabs, with live numbers.</span></div><h2 style="margin-top:0">Start here</h2>
+   <div class="card"><p><b>What this is.</b> OpenCL is a standard for running programs on graphics cards and other processors. Its rules are written in a long specification that changes from version to version. This tool reads the public Khronos files and lays out <i>what changed, when, and what depends on what</i>, so you can see the whole picture at once instead of file by file.</p>
+   <p><b>What it is not.</b> It is independent and is not from Khronos. It cannot tell you what Khronos will do. Where it makes a guess it says so.</p>
+   <p><b>How to read the labels.</b> ${lab('ex','extracted')} read straight from a Khronos file. ${lab('de','derived')} worked out by a stated rule. ${lab('he','heuristic')} a keyword guess, so check it. ${lab('un','not knowable')} the public files cannot tell us.</p>
+   <p><b>Share what you are looking at.</b> The address bar always holds the whole view (tab, choices, selection). Press <i>Copy link to this view</i> at the top right and send it.</p></div>
+   <h2>Where to go for what</h2><div class="grid g2">${tabs.map(([id,name]) => `<div class="card"><b><a href="#${id}">${esc(name)}</a></b><div class="small mute">${esc(PLAIN[id]||'')}</div></div>`).join('')}
+    <div class="card"><b><a href="#propose">Propose</a></b><div class="small mute">${esc(PLAIN.propose)}</div></div></div>
+   <h2>Glossary</h2><div class="bar"><input id="hq" placeholder="search the glossary" style="min-width:260px"></div><div id="hl"></div>`;
+  const draw = () => { const q = $('#hq').value.toLowerCase();
+    $('#hl').innerHTML = `<div class="card"><table><tbody>${GL.filter(e => !q || (e.term + ' ' + (e.aliases||[]).join(' ') + ' ' + e.plain).toLowerCase().includes(q)).map(e => `<tr data-t="${esc(e.term)}"><td style="width:200px"><b>${esc(e.term)}</b>${e.aliases&&e.aliases.length?`<div class="small mute">${esc(e.aliases.join(', '))}</div>`:''}</td><td>${esc(e.plain)}${e.where?`<div class="small mute">Where to verify: ${esc(e.where)}</div>`:''}</td></tr>`).join('') || '<tr><td class="mute">no match</td></tr>'}</tbody></table></div>`; };
+  $('#hq').oninput = draw; draw(); $('#tourbtn').onclick = () => tourGo(0);
+  const t = CURQ.get('t'); if (t) { const r = $('#hl').querySelector(`tr[data-t="${CSS.escape(t)}"]`); if (r) { r.classList.add('hl'); setTimeout(() => r.scrollIntoView({block: 'center'}), 50); } }
+};
+
+// ---------- overview ----------
+VIEWS.overview = el => {
+  const ver = M.core.map(f => f.version);
+  const maxN = Math.max(...M.core.map(f => f.symbols.length));
+  const stat = {}; extList.forEach(e => stat[e.status] = (stat[e.status]||0)+1);
+  el.innerHTML = `
+  <p class="small mute">Every number here is recomputed from the Khronos repositories in <code>sources/</code> by the scripts in <code>tools/</code>. Labels: ${lab('ex','extracted')} ${lab('de','derived')} ${lab('he','heuristic')} ${lab('un','not derivable')}.</p>
+  <div class="grid g4">
+    <div class="card kpi"><b>${M.core.length}</b><span>core versions in registry (${ver[0]} to ${ver.at(-1)})</span></div>
+    <div class="card kpi"><b>${T.length}</b><span>spec tags with a registry (${T[0]} to ${last})</span></div>
+    <div class="card kpi"><b>${extList.filter(e=>e.present).length}</b><span>extensions in latest registry</span></div>
+    <div class="card kpi"><b>${M.refpages.filter(r=>r.last===last&&r.doc==='API').length}</b><span>reference pages in the API spec (+${M.refpages.filter(r=>r.last===last&&r.doc==='C').length} in the C spec)</span></div>
+  </div>
+  <h2>Core API size per version ${lab('ex','extracted')}</h2>
+  <div class="card"><table><thead><tr><th>Version</th><th>Commands</th><th>Enums</th><th>Types</th><th>Newly deprecated in it</th><th></th></tr></thead><tbody>
+  ${M.core.map(f => { const c = k => f.symbols.filter(s=>s.k===k).length;
+     const depHere = M.core.flatMap(g => g.symbols.filter(s => s.dep === f.version)).length;
+     return `<tr><td><b>${f.version}</b></td><td>${c('command')}</td><td>${c('enum')}</td><td>${c('type')}</td><td>${depHere||''}</td>
+       <td style="width:40%"><div style="background:var(--acc);height:8px;border-radius:4px;width:${100*f.symbols.length/maxN}%"></div></td></tr>`; }).join('')}
+  </tbody></table></div>
+  <p class="note">Symbols are listed in the first feature that requires them. Deprecation is read from two places in the registry (require-block comments and command attributes); enums deprecated only by a header comment are not in this count — see Provenance &amp; traps.</p>
+  <div class="grid g2">
+  <div><h2>Extensions by status ${lab('de','derived')}</h2><div class="card"><table><tbody>
+    ${Object.entries(stat).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${chip(k,k)}</td><td>${v}</td></tr>`).join('')}
+  </tbody></table><div class="small mute">promoted = registry <code>promotedto</code> set; ratified = <code>ratified</code> attribute; experimental = <code>experimental="true"</code>; unratified = neither (all vendor extensions and some EXT/KHR drafts); removed = existed in an earlier tag, absent now.</div></div></div>
+  <div><h2>Spec tags ${lab('ex','extracted')}</h2><div class="card scroll" style="max-height:340px"><table><thead><tr><th>Tag</th><th>Date</th><th>Extensions</th><th>Changed</th></tr></thead><tbody>
+    ${T.map((t,i)=>{ const d = M.diffs.find(x=>x.to===t); return `<tr class="row" onclick="go('versions','${t}')"><td>${t}</td><td>${M.provenance.docs[t].date}</td><td>${extCountAt(t)}</td><td>${d? (d.added.length?`+${d.added.length} `:'')+(d.removed.length?`−${d.removed.length} `:'')+(d.changed.length?`~${d.changed.length}`:''):''}</td></tr>`}).join('')}
+  </tbody></table></div></div></div>`;
+};
+window.go = (tab, arg) => { STATE.arg = arg; show(tab); };
+const STATE = {arg: null, ext: null, picks: new Set(), optpick: null, res: null, cl: new Set(['high','notable','info']), cs: new Set(['TESTED','DERIVED','HEURISTIC','SAMPLE','NOT KNOWABLE'])};
+
+// ---------- versions ----------
+VIEWS.versions = el => {
+  const labels = [...new Set(M.changes.map(c => c.to))];
+  const sel = STATE.arg && (T.includes(STATE.arg) || labels.includes(STATE.arg)) ? STATE.arg : last; STATE.arg = null;
+  el.innerHTML = `<div class="bar"><label>Release / revision <select id="vsel">
+     <optgroup label="Spec revisions (tags)">${[...T].reverse().map(t=>`<option ${t===sel?'selected':''}>${t}</option>`).join('')}</optgroup>
+     <optgroup label="Core versions">${[...M.core].reverse().map(f=>`<option value="OpenCL ${f.version}" ${('OpenCL '+f.version)===sel?'selected':''}>OpenCL ${f.version}</option>`).join('')}</optgroup>
+  </select></label></div><div id="vout"></div>`;
+  const draw = () => {
+    const v = $('#vsel').value, out = $('#vout');
+    if (v.startsWith('OpenCL ')) {
+      const ver = v.slice(7), f = M.core.find(x => x.version === ver);
+      const ch = changesFor(v);
+      const dep = M.core.flatMap(g => g.symbols.filter(s => s.dep === ver).map(s => ({...s, intro: g.version})));
+      out.innerHTML = `<h2>${v} ${lab('ex','extracted')}</h2>
+       <div class="grid g4"><div class="card kpi"><b>${f.symbols.filter(s=>s.k==='command').length}</b><span>commands introduced</span></div>
+       <div class="card kpi"><b>${f.symbols.filter(s=>s.k==='enum').length}</b><span>enums introduced</span></div>
+       <div class="card kpi"><b>${f.symbols.filter(s=>s.k==='type').length}</b><span>types introduced</span></div>
+       <div class="card kpi"><b>${dep.length}</b><span>symbols deprecated in this version</span></div></div>
+       ${dep.length?`<h3>Deprecated in ${ver}</h3><div class="card">${dep.map(s=>`<code>${esc(s.n)}</code> <span class="mute small">(from ${s.intro})</span>`).join(' · ')}</div>`:''}
+       <h3>Spec changelog entries (${ch.length}) ${lab('ex','extracted')}</h3>${changeTable(ch)}
+       <h3>Symbols introduced</h3><div class="scroll" style="max-height:300px"><table><thead><tr><th>Name</th><th>Kind</th><th>Group</th></tr></thead><tbody>${f.symbols.map(s=>`<tr><td><code>${esc(s.n)}</code></td><td>${s.k}</td><td class="small mute">${esc(s.g)}</td></tr>`).join('')}</tbody></table></div>`;
+    } else {
+      const d = M.diffs.find(x => x.to === v), ch = changesFor(v);
+      out.innerHTML = `<h2>${v} <span class="mute small">${M.provenance.docs[v].date} · ${M.provenance.docs[v].commit.slice(0,8)}</span></h2>` +
+      (d ? `<div class="grid g4"><div class="card kpi"><b>${d.added.length}</b><span>extensions added</span></div><div class="card kpi"><b>${d.removed.length}</b><span>extensions removed</span></div><div class="card kpi"><b>${d.changed.length}</b><span>extensions changed</span></div><div class="card kpi"><b>${extCountAt(v)}</b><span>extensions total</span></div></div>
+        <p class="note">Diff against ${d.from}. ${lab('ex','extracted')} from <code>xml/cl.xml</code> at both tags.</p>
+        ${d.features_added.length?`<div class="card">New core feature block: ${d.features_added.map(x=>chip('OpenCL '+x,'promoted')).join('')}</div>`:''}
+        ${d.added.length?`<h3>Added</h3><div>${d.added.map(extLink).join(' ')}</div>`:''}
+        ${d.removed.length?`<h3>Removed</h3><div>${d.removed.map(n=>chip(n,'removed')).join('')}</div>`:''}
+        ${d.changed.length?`<h3>Changed</h3><table><tbody>${d.changed.map(c=>`<tr><td style="width:34%">${extLink(c.ext)}</td><td>${c.what.map(w=>w.field==='symbols'?`symbols: ${w.added.length?`<span class="chip added">+${w.added.length}</span>`:''}${w.removed.length?`<span class="chip removed">−${w.removed.length}</span>`:''} <span class="small mute">${esc([...w.added.slice(0,3), ...w.removed.slice(0,2).map(x=>'−'+x)].join(', '))}${(w.added.length+w.removed.length>5)?' …':''}</span>`:`${w.field}: <code>${esc(w.from||'—')}</code> → <code>${esc(w.to||'—')}</code>`).join('<br>')}</td></tr>`).join('')}</tbody></table>`:''}
+        ${Object.keys(d.core_symbols_added).length?`<h3>Core symbols added to an existing feature block</h3>${Object.entries(d.core_symbols_added).map(([k,x])=>`<div class="card"><b>${k}</b>: ${x.map(n=>`<code>${esc(n)}</code>`).join(' ')}</div>`).join('')}`:''}`
+       : `<p class="mute">First tag with a registry; no earlier snapshot to diff.</p>`) +
+      `<h3>Changelog entries naming this revision (${ch.length}) ${lab('ex','extracted')}</h3>${changeTable(ch)}`;
+    }
+  };
+  $('#vsel').onchange = draw; draw();
+};
+function changeTable(ch){
+  if (!ch.length) return '<p class="mute small">No changelog entries are attached to this label.</p>';
+  return `<div class="card"><table><tbody>${ch.map(c=>`<tr><td style="width:84px">${chip(c.doc)}${chip(c.kind,c.kind)}</td><td>${c.level>1?'<span class="mute">↳ </span>':''}${c.lead&&c.level>1?`<span class="mute small">${esc(c.lead.slice(0,70))} → </span>`:''}${esc(c.text)}${c.refs.length?` <span class="mute small">(#${c.refs.join(', #')})</span>`:''}</td></tr>`).join('')}</tbody></table></div><p class="note">Kind is a keyword guess ${lab('he','heuristic')}; the text and the numbers are verbatim ${lab('ex','extracted')}.</p>`;
+}
+function extLink(n){ const e = EXT[n]; return `<a href="#" onclick="STATE.ext='${n}';show('extensions');return false" class="chip ${e?e.status:''}">${esc(n)}</a>`; }
+
+// ---------- compare ----------
+VIEWS.compare = el => {
+  const opt = (sel) => T.map(t=>`<option ${t===sel?'selected':''}>${t}</option>`).join('');
+  el.innerHTML = `<div class="bar"><label>From <select id="ca">${opt('v3.0.19')}</select></label><label>To <select id="cb">${opt(last)}</select></label>
+   <label><input type="checkbox" id="cnoise"> include editorial-only changes</label></div><div id="cout"></div>`;
+  const draw = () => {
+    let a = $('#ca').value, b = $('#cb').value; if (ti(a) > ti(b)) [a,b] = [b,a];
+    const added = [], removed = [], moved = [];
+    for (const e of extList) {
+      const sa = extStateAt(e.name, a), sb = extStateAt(e.name, b);
+      if (!sa && sb) added.push(e.name); else if (sa && !sb) removed.push(e.name);
+      else if (sa && sb) { const diffs = []; for (const k of ['revision','ratified','experimental','promotedto','obsoletedby']) if (sa[k] !== sb[k]) diffs.push([k, sa[k], sb[k]]);
+        if (diffs.length) moved.push([e.name, diffs]); }
+    }
+    const core = coreSymAddedBetween(a, b);
+    const hs = M.headings.filter(h => !presentAt(h, a) && presentAt(h, b)), hr = M.headings.filter(h => presentAt(h, a) && !presentAt(h, b));
+    const ra = M.refpages.filter(r => !presentAt(r, a) && presentAt(r, b)), rr = M.refpages.filter(r => presentAt(r, a) && !presentAt(r, b));
+    const chg = M.changes.filter(c => c.to && T.includes(tagOfLabel(c.to)) && ti(tagOfLabel(c.to)) > ti(a) && ti(tagOfLabel(c.to)) <= ti(b));
+    $('#cout').innerHTML = `<h2>${a} → ${b}</h2>
+     <div class="grid g4"><div class="card kpi"><b>${added.length}</b><span>extensions added</span></div><div class="card kpi"><b>${removed.length}</b><span>removed</span></div><div class="card kpi"><b>${moved.length}</b><span>status / revision changes</span></div><div class="card kpi"><b>${Object.values(core).flat().length}</b><span>core symbols added</span></div>
+     <div class="card kpi"><b>${hs.length}/${hr.length}</b><span>spec headings added / removed</span></div><div class="card kpi"><b>${ra.length}/${rr.length}</b><span>API ref pages added / removed</span></div><div class="card kpi"><b>${chg.length}</b><span>changelog entries</span></div></div>
+     ${added.length?`<h3>Extensions added</h3>${added.map(extLink).join(' ')}`:''}
+     ${removed.length?`<h3>Extensions removed</h3>${removed.map(n=>chip(n,'removed')).join('')}`:''}
+     ${moved.length?`<h3>Extensions whose status or revision changed</h3><table><tbody>${moved.map(([n,d])=>`<tr><td style="width:34%">${extLink(n)}</td><td>${d.map(([k,x,y])=>`${k}: <code>${esc(x||'—')}</code> → <code>${esc(y||'—')}</code>`).join('; ')}</td></tr>`).join('')}</tbody></table>`:''}
+     ${Object.keys(core).length?`<h3>Core symbols added</h3>${Object.entries(core).map(([k,x])=>`<div class="card"><b>OpenCL ${k}</b>: ${x.map(n=>`<code>${esc(n)}</code>`).join(' ')}</div>`).join('')}`:''}
+     ${ra.length||rr.length?`<h3>API reference pages</h3>${ra.map(r=>chip('+ '+r.api,'added')).join('')}${rr.map(r=>chip('− '+r.api,'removed')).join('')}`:''}
+     ${hs.length||hr.length?`<h3>Spec headings ${lab('de','derived')}</h3><div class="small mute">Presence is inferred from the first and last tag a heading path was seen in; a heading that disappears and returns is shown as continuous.</div><div class="scroll" style="max-height:260px"><table><tbody>${hs.map(h=>`<tr><td>${chip('+','added')}${chip(h.doc)}</td><td>${esc(h.path.join(' › '))}</td></tr>`).join('')}${hr.map(h=>`<tr><td>${chip('−','removed')}${chip(h.doc)}</td><td>${esc(h.path.join(' › '))}</td></tr>`).join('')}</tbody></table></div>`:''}
+     <h3>Changelog entries in this range</h3>${changeTable(chg)}`;
+  };
+  $('#ca').onchange = $('#cb').onchange = draw; draw();
+};
+
+// ---------- structure ----------
+VIEWS.structure = el => {
+  const docs = [...new Set(M.headings.map(h=>h.doc))];
+  el.innerHTML = `<div class="bar"><label>Spec <select id="sd">${docs.map(d=>`<option>${d}</option>`).join('')}</select></label>
+   <label>Show <select id="sm"><option value="all">all headings</option><option value="chg">only added/removed between…</option></select></label>
+   <label class="hide" id="sw">from <select id="sa">${T.map(t=>`<option ${t==='v3.0.19'?'selected':''}>${t}</option>`).join('')}</select> to <select id="sb">${T.map(t=>`<option ${t===last?'selected':''}>${t}</option>`).join('')}</select></label>
+   <input id="sq" placeholder="filter text, e.g. sub-group"> <label><input type="checkbox" id="sr"> API ref pages instead</label></div>
+   <p class="note">${lab('ex','extracted')} from the asciidoc sources. The API spec's per-function sections are the <code>refpage</code> blocks; the C spec is one large file, so its outline is by heading. Extension chapters are separate files (see Extensions).</p><div id="sout" class="card tree"></div>`;
+  const draw = () => {
+    const doc = $('#sd').value, mode = $('#sm').value, q = $('#sq').value.toLowerCase(), asRef = $('#sr').checked;
+    $('#sw').classList.toggle('hide', mode !== 'chg');
+    const a = $('#sa').value, b = $('#sb').value;
+    const badge = h => `<span class="tag-ext">${h.first.replace('v','')}${h.last!==last?' → '+h.last.replace('v',''):''}</span>`;
+    const keep = h => (!q || h.path.join(' ').toLowerCase().includes(q)) && (mode==='all' || (presentAt(h,a) !== presentAt(h,b)));
+    if (asRef) {
+      const rs = M.refpages.filter(keep2 => keep2.doc===doc && (!q || (keep2.api+' '+keep2.section.join(' ')).toLowerCase().includes(q)) && (mode==='all' || (presentAt(keep2,a)!==presentAt(keep2,b))));
+      $('#sout').innerHTML = `<div class="mute small">${rs.length} reference pages</div><table><thead><tr><th>Name</th><th>Section</th><th>Seen</th></tr></thead><tbody>${rs.map(r=>`<tr><td>${chip(r.doc)}<code>${esc(r.api)}</code></td><td class="small">${esc(r.section.join(' › '))}</td><td class="small mute">${r.first.replace('v','')}${r.last!==last?' → '+r.last.replace('v',''):''}</td></tr>`).join('')}</tbody></table>`; return;
+    }
+    const hs = M.headings.filter(h => h.doc===doc && keep(h));
+    // build tree
+    const root = {c:{}}; for (const h of hs) { let n = root; h.path.forEach((p,i)=>{ n = n.c[p] ||= {c:{}}; if (i===h.path.length-1) n.h = h; }); }
+    const render = (n, depth) => Object.entries(n.c).map(([k,v]) => { const kids = Object.keys(v.c).length;
+      const lbl = `${esc(k)} ${v.h?badge(v.h):''}`;
+      return kids ? `<details ${depth<1||q||mode!=='all'?'open':''}><summary>${lbl} <span class="mute small">(${kids})</span></summary>${render(v,depth+1)}</details>` : `<div class="leaf">${lbl}</div>`; }).join('');
+    $('#sout').innerHTML = `<div class="mute small">${hs.length} headings · ${M.sizes[last][doc]?.words?.toLocaleString() ?? '—'} words in ${last}</div>` + render(root, 0);
+  };
+  ['sd','sm','sa','sb','sr'].forEach(i => $('#'+i).onchange = draw); $('#sq').oninput = draw; draw();
+};
+
+// ---------- extensions ----------
+VIEWS.extensions = el => {
+  const classes = [...new Set(extList.map(e=>e.class.startsWith('vendor')?'vendor':e.class))];
+  el.innerHTML = `<div class="bar"><input id="eq" placeholder="search name"> <select id="ec"><option value="">all classes</option>${classes.map(c=>`<option>${c}</option>`).join('')}</select>
+   <select id="es"><option value="">all statuses</option>${['promoted','ratified','experimental','unratified','obsolete','removed'].map(c=>`<option>${c}</option>`).join('')}</select>
+   <label><input type="checkbox" id="ep" checked> present in ${last}</label></div>
+   <div class="split"><div class="scroll" id="elist"></div><div id="edet" class="card"><span class="mute">Select an extension.</span></div></div>`;
+  let sort = 'name', dir = 1;
+  const draw = () => {
+    const q = $('#eq').value.toLowerCase(), c = $('#ec').value, s = $('#es').value, p = $('#ep').checked;
+    let rows = extList.filter(e => (!q||e.name.includes(q)) && (!c || e.class.startsWith(c)) && (!s || e.status===s) && (!p || e.present));
+    const key = {name:e=>e.name,status:e=>e.status,first:e=>ti(e.first),syms:e=>(e.symbols||[]).length,words:e=>e.words||0}[sort];
+    rows.sort((x,y)=> (key(x)>key(y)?1:key(x)<key(y)?-1:0)*dir);
+    $('#elist').innerHTML = `<table><thead><tr>${[['name','Extension'],['status','Status'],['first','First seen'],['syms','Symbols'],['words','Words']].map(([k,t])=>`<th class="s" data-k="${k}">${t}${sort===k?(dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>
+      ${rows.map(e=>`<tr class="row ${STATE.ext===e.name?'sel':''}" data-n="${e.name}"><td><code>${esc(e.name)}</code></td><td>${chip(e.status,e.status)}${e.promotedto?chip(e.promotedto.replace('CL_VERSION_','').replace('_','.')):''}</td><td class="small">${(e.first||'').replace('v','')}</td><td>${(e.symbols||[]).length||''}</td><td class="small mute">${e.words||''}</td></tr>`).join('')}</tbody></table><div class="small mute" style="padding:6px 8px">${rows.length} extensions</div>`;
+    $('#elist').querySelectorAll('th.s').forEach(th => th.onclick = () => { sort === th.dataset.k ? dir = -dir : (sort = th.dataset.k, dir = 1); draw(); });
+    $('#elist').querySelectorAll('tr.row').forEach(tr => tr.onclick = () => { STATE.ext = tr.dataset.n; draw(); detail(); syncHash(); });
+  };
+  const detail = () => { const e = EXT[STATE.ext]; if (!e) return;
+    const dsym = (e.symbols||[]).filter(s=>s.k!=='type'); const ch = e.changes.map(i=>M.changes[i]);
+    $('#edet').innerHTML = `<h3 style="margin-top:0"><code>${esc(e.name)}</code> ${chip(e.status,e.status)}</h3>
+     <table><tbody>
+      <tr><td class="mute">Class</td><td>${esc(e.class)}</td></tr>
+      <tr><td class="mute">Revision</td><td>${esc(e.revision||'—')}${e.experimental?' ':''}${e.experimental?chip('experimental','experimental'):''}</td></tr>
+      <tr><td class="mute">Ratified</td><td>${esc(e.ratified||'no')}</td></tr>
+      ${e.promotedto?`<tr><td class="mute">Promoted to</td><td>${esc(e.promotedto)}</td></tr>`:''}${e.obsoletedby?`<tr><td class="mute">Obsoleted by</td><td>${extLink(e.obsoletedby)}</td></tr>`:''}
+      <tr><td class="mute">Depends on</td><td>${esc(e.depends||'—')}</td></tr>${e.condition?`<tr><td class="mute">Condition</td><td><code>${esc(e.condition)}</code></td></tr>`:''}
+      <tr><td class="mute">Needed by</td><td>${(e.dependents||[]).map(extLink).join(' ')||'—'}</td></tr>
+      <tr><td class="mute">Spec file</td><td>${e.spec?`<code>${esc(e.spec.dir)}/${esc(e.name)}.asciidoc</code> · ${e.words||'?'} words · first file at ${e.spec.first}`:'none in the spec repo'}</td></tr>
+     </tbody></table>
+     <h3>Lifecycle ${lab('ex','extracted')}</h3><table><tbody>${e.hist.map(h=>`<tr><td>${h.tag}</td><td>${h.present?`rev ${esc(h.revision)} · ${esc(h.ratified||'unratified')}${h.experimental?' · experimental':''}${h.promotedto?' · promoted→'+esc(h.promotedto):''} · ${h.nsyms} symbols`:'<span class="mute">absent</span>'}</td></tr>`).join('')}</tbody></table>
+     ${Object.keys(e.mentions||{}).length?`<h3>Optional-feature mentions in its spec text ${lab('he','heuristic')}</h3>${Object.entries(e.mentions).map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}`:''}
+     ${dsym.length?`<h3>Symbols (${dsym.length})</h3><div class="small">${dsym.slice(0,60).map(s=>`<code>${esc(s.n)}</code>`).join(' ')}${dsym.length>60?' …':''}</div>`:''}
+     ${ch.length?`<h3>Changelog mentions (${ch.length})</h3>${changeTable(ch)}`:''}`;
+  };
+  ['eq','ec','es','ep'].forEach(i => $('#'+i).oninput = draw); draw(); detail();
+};
+
+// ---------- optional features ----------
+VIEWS.optional = el => {
+  const req = M.changes.filter(c => c.kind==='required' || /required/i.test(c.text) && c.to==='OpenCL 3.1');
+  el.innerHTML = `<p class="small mute">Appendix H of the API spec is the contract for every feature OpenCL 3.0 made optional: how to detect it, and what each API does when it is absent. ${lab('ex','extracted')}. The appendix text is <b>identical</b> in v3.0.19 and v3.1.2 ${lab('de','derived')}: 3.1 did not change it. Where 3.1 made something <i>required</i>, the statement lives elsewhere (see below).</p>
+  <h2>Required-in-3.1 statements found in the changelogs</h2>${changeTable(M.changes.filter(c=>c.to==='OpenCL 3.1' && (c.kind==='required' || /requir/i.test(c.text))))}
+  <p class="note">3.1 requirement text is spread over: the architecture chapter's version-requirement list, individual query descriptions (for example <code>CL_DEVICE_MAX_NUM_SUB_GROUPS</code>: "required for an OpenCL 2.1, OpenCL 2.2, or OpenCL 3.1 device") and the extension-name list in the platform layer. Any future "make X required" change has to find all of those — see the 3.2 workbench.</p>
+  <h2>Optional features</h2><div class="grid g2">${M.optional.map(f=>`<div class="card"><h3 style="margin-top:0">${esc(f.title)}</h3>
+     ${f.macros.length?`<div>${f.macros.map(m=>chip('__'+m,'ratified')).join('')}</div>`:''}
+     ${f.queries.length?`<div class="small">${f.queries.map(q=>`<code>${esc(q)}</code>`).join(' ')}</div>`:''}
+     ${f.rows.length?`<table><tbody>${f.rows.map(r=>`<tr><td class="small" style="width:42%"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>`:`<div class="small mute">${esc(f.text.slice(0,420))}</div>`}</div>`).join('')}</div>
+  <h2>Which extensions touch which optional feature ${lab('he','heuristic')}</h2>
+  <p class="small mute">Keyword counts in each extension's spec text, for extensions that are promoted, ratified or experimental. A high count suggests a promotion would have to say what happens on devices lacking the feature. It is a pointer for reading, not a verdict.</p>
+  <div class="scroll"><table><thead><tr><th>Extension</th><th>Status</th>${M.optional_keywords.map(k=>`<th class="heat" title="${esc(k)}" style="writing-mode:vertical-rl;height:120px">${esc(k)}</th>`).join('')}</tr></thead><tbody>
+  ${extList.filter(e=>e.present&&['ratified','experimental','promoted'].includes(e.status)&&e.words).sort((a,b)=>a.status.localeCompare(b.status)||a.name.localeCompare(b.name)).map(e=>`<tr><td>${extLink(e.name)}</td><td>${chip(e.status,e.status)}</td>${M.optional_keywords.map(k=>{const v=e.mentions[k]||0;return `<td class="heat" style="${v?`background:color-mix(in srgb,var(--acc) ${Math.min(80,12+v*4)}%,transparent)`:''}">${v||''}</td>`}).join('')}</tr>`).join('')}
+  </tbody></table></div>`;
+};
+
+// ---------- 3.2 workbench ----------
+function candidateScore(e){ return (e.ratified?2:0) + (e.experimental?-2:0) + ((e.depends_on||[]).every(d=>/^CL_VERSION/.test(d)||(EXT[d]&&(EXT[d].status==='promoted'||EXT[d].promotedto)))?1:0); }
+function stripName(n){ return n.replace(/(_KHR|KHR|_EXT|EXT)$/, ''); }
+VIEWS.bench = el => {
+  const cands = extList.filter(e => e.present && !e.promotedto && !e.obsoletedby && (e.class==='khr'||e.class==='ext')).sort((a,b)=>candidateScore(b)-candidateScore(a)||a.name.localeCompare(b.name));
+  el.innerHTML = `<p class="small mute">Pick the changes you would ask for in a hypothetical OpenCL 3.2. The report lists the consequences that can be read off the sources, using what 3.0 → 3.1 did as the precedent. Nothing here is a Khronos plan; 3.2 does not exist in the repositories (docs <code>main</code> = ${last}).</p>
+  <div class="split"><div><h3 style="margin-top:0">A. Promote extensions into core</h3>
+   <div class="small mute">Ordered by readiness ${lab('de','derived')}: ratified, no experimental flag, every dependency already core or promoted.</div>
+   <div class="scroll" style="max-height:46vh"><table><thead><tr><th></th><th>Extension</th><th>Status</th><th>Readiness</th></tr></thead><tbody>
+   ${cands.map(e=>`<tr><td><input type="checkbox" data-n="${e.name}" ${STATE.picks.has(e.name)?'checked':''}></td><td><code>${esc(e.name)}</code></td><td>${chip(e.status,e.status)}</td><td class="mute">${candidateScore(e)}/3</td></tr>`).join('')}</tbody></table></div>
+   <h3>B. Make an optional feature required</h3><select id="bf"><option value="">— none —</option>${M.optional.map(f=>`<option ${STATE.optpick===f.title?'selected':''}>${esc(f.title)}</option>`).join('')}</select></div>
+  <div><div class="bar"><b>Consequence report</b><button class="act" id="bcopy">Copy as Markdown</button></div><div id="brep" class="card"></div></div></div>`;
+  const draw = () => {
+    const picks = [...STATE.picks].map(n=>EXT[n]); const md = [];
+    const out = [];
+    const sec = (t, html, mdText) => { out.push(`<h3>${t}</h3>${html}`); md.push(`### ${t.replace(/<[^>]+>/g,'')}\n${mdText}\n`); };
+    if (!picks.length && !STATE.optpick) { $('#brep').innerHTML = '<span class="mute">Tick extensions or choose a feature.</span>'; return; }
+    if (picks.length) {
+      const names = new Set(picks.map(p=>p.name));
+      // dependencies
+      const deps = [...new Set(picks.flatMap(p=>(p.depends_on||[])))].filter(d=>!/^CL_VERSION/.test(d));
+      const unmet = deps.filter(d => !names.has(d) && !(EXT[d] && (EXT[d].promotedto)));
+      const needed = [...new Set(picks.flatMap(p=>p.dependents||[]))].filter(d=>!names.has(d));
+      sec(`Dependencies ${lab('ex','extracted')}`, `<div>Needs: ${deps.map(d=>extLink(d)).join(' ')||'only core versions'}</div>
+        ${unmet.length?`<div class="note"><b>Not promoted and not in your selection:</b> ${unmet.map(extLink).join(' ')} — core would depend on an extension, which 3.1 avoided (all nine promotions were self-contained or depended on core). ${lab('de','derived')}</div>`:`<div class="note">Every dependency is core, already promoted, or in your selection.</div>`}
+        <div>Extensions that depend on your picks (their <code>depends</code> text would need a core-version alternative): ${needed.map(extLink).join(' ')||'none'}</div>`,
+        `Needs: ${deps.join(', ')||'core only'}. Unmet: ${unmet.join(', ')||'none'}. Dependents: ${needed.join(', ')||'none'}.`);
+      // symbols & naming
+      const coreNames = new Set(M.core.flatMap(f=>f.symbols.map(s=>s.n)));
+      const rows = []; picks.forEach(p => (p.symbols||[]).filter(s=>s.k==='command'||s.k==='enum').forEach(s => { const nn = stripName(s.n); rows.push({ext:p.name, k:s.k, from:s.n, to:nn, renamed:nn!==s.n, clash: coreNames.has(nn) && nn!==s.n}); }));
+      const byExt = {}; rows.forEach(r=>(byExt[r.ext] ||= []).push(r));
+      const allNew = new Map(); rows.forEach(r => { if (!allNew.has(r.to)) allNew.set(r.to, []); allNew.get(r.to).push(r.from); });
+      const dup = [...allNew].filter(([k,v])=>v.length>1);
+      sec(`Symbols and naming ${lab('de','derived')}`, `<div class="small mute">Rule (derived from the precedent table below): ${(()=>{const p31=M.precedent.filter(p=>p.to==='3.1'),ok=p31.filter(p=>p.n_renamed===p.symbols);return `in ${ok.length} of the ${p31.length} promotions to 3.1 that carry API symbols, every symbol lost its <code>KHR</code>/<code>EXT</code> suffix in core`;})()}. Earlier promotions are mixed (some symbols were already unsuffixed).</div>
+        <table><thead><tr><th>Extension</th><th>Commands</th><th>Enums</th><th>Suffix-stripped names already in core</th></tr></thead><tbody>${picks.map(p=>{const r=byExt[p.name]||[];return `<tr><td><code>${esc(p.name)}</code></td><td>${r.filter(x=>x.k==='command').length}</td><td>${r.filter(x=>x.k==='enum').length}</td><td>${r.filter(x=>x.clash).length||'none'}</td></tr>`}).join('')}</tbody></table>
+        ${dup.length?`<div class="note"><b>Name collisions inside your selection:</b> ${dup.map(([k,v])=>`<code>${esc(k)}</code> ← ${v.map(esc).join(', ')}`).join('; ')}</div>`:''}
+        <details><summary class="small">Proposed core names (${rows.length})</summary><div class="small">${rows.map(r=>`<code>${esc(r.from)}</code> → <code>${esc(r.to)}</code>`).join('<br>')}</div></details>`,
+        rows.map(r=>`- ${r.from} -> ${r.to}`).join('\n'));
+      // optional interaction
+      const agg = {}; picks.forEach(p => Object.entries(p.mentions||{}).forEach(([k,v]) => agg[k]=(agg[k]||0)+v));
+      const top = Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      sec(`Interaction with optional features ${lab('he','heuristic')}`, top.length?`<div>${top.map(([k,v])=>`<span class="chip">${esc(k)} · ${v}</span>`).join('')}</div><div class="note">3.0 paired each optional feature with a device query and an OpenCL C feature macro (appendix H). If a promoted feature cannot be supported everywhere, expect to need the same pairing — an inference from that precedent, not something the sources state.</div>`:'<span class="mute">No keyword hits.</span>', top.map(([k,v])=>`- ${k}: ${v}`).join('\n'));
+      // spec surface
+      const words = picks.reduce((a,p)=>a+(p.words||0),0);
+      sec(`Spec surface ${lab('ex','extracted')}`, `<div>${words.toLocaleString()} words across ${picks.filter(p=>p.spec).length} extension chapters would be merged into the API / C / Env specs. In 3.1 the Extension spec was removed and extension text already lives in the main specs, so the merge is a move, not a new write-up.</div>`, `${words} words across ${picks.length} chapters.`);
+      // extension string
+      sec(`Extension names after promotion ${lab('ex','extracted')}`, `<div>3.1 requires devices to <b>keep reporting</b> the promoted extension names (${M.must_report_3_1.length} names listed in the platform layer: ${M.must_report_3_1.map(n=>`<code>${n.replace('cl_khr_','')}</code>`).join(', ')}). ${M.promoted_3_1.length===M.must_report_3_1.length?'This matches the nine <code>promotedto="CL_VERSION_3_1"</code> entries in the registry.':''} A 3.2 promotion would presumably need a similar list entry ${lab('de','derived')}.</div>`, 'Keep reporting extension names; add to the platform-layer list.');
+    }
+    if (STATE.optpick) {
+      const f = M.optional.find(x=>x.title===STATE.optpick);
+      sec(`Making “${esc(f.title)}” required ${lab('ex','extracted')}`, `<div>Appendix H lists ${f.rows.length} API behaviours that exist only because the feature is optional. For a device claiming the new version these become dead branches (they would still bind older devices):</div>
+        <table><tbody>${f.rows.map(r=>`<tr><td class="small"><code>${esc(r.api)}</code></td><td class="small">${esc(r.behaviour)}</td></tr>`).join('')}</tbody></table>
+        ${f.macros.length?`<div>OpenCL C macros that would be unconditionally defined: ${f.macros.map(m=>chip('__'+m,'ratified')).join('')}</div>`:''}
+        ${f.queries.length?`<div>Queries that would become constant for such devices: ${f.queries.map(q=>`<code>${esc(q)}</code>`).join(' ')}</div>`:''}
+        <div class="note">Precedent: 3.1 made sub-groups and SPIR-V required without editing appendix H (it is unchanged), and wrote the requirement into query descriptions and the architecture chapter's version list. Where to look: version-literal sites below.</div>`, f.rows.map(r=>`- ${r.api}: ${r.behaviour}`).join('\n'));
+    }
+    // bump checklist
+    const t = M.touch, by = {}; t.sites.forEach(s => by[s.area]=(by[s.area]||0)+1);
+    sec(`Version-bump checklist (what 3.1 touched) ${lab('ex','extracted')}`, `<div class="small">Lines in the ${t.tree} tree that name OpenCL 3.1: ${t.sites.length}, plus ${t.header_sites.length} in the headers. By area: ${Object.entries(by).map(([k,v])=>`${chip(k+' · '+v)}`).join('')}.</div>
+      <details><summary class="small">Header lines (${t.header_sites.length})</summary><div class="small mono">${t.header_sites.map(h=>`${esc(h.path)}:${h.line} ${esc(h.text)}`).join('<br>')}</div></details>
+      <details><summary class="small">Spec / registry / script lines (${t.sites.length})</summary><div class="small mono">${t.sites.map(s=>`${esc(s.path)}:${s.line} ${esc(s.text)}`).join('<br>')}</div></details>
+      <div class="note">Churn from ${t.from} to the first 3.1 tag, by area (files changed; “trivial” = 2 lines or fewer, almost always the copyright year): ${Object.entries(t.churn).map(([k,v])=>`${esc(k)}: ${v.files} (${v.trivial} trivial)`).join(' · ')}</div>`,
+      `${t.sites.length} spec/registry/script lines and ${t.header_sites.length} header lines name 3.1 in the current tree.`);
+    sec('What the sources cannot tell you '+lab('un','not derivable'), `<ul class="tight"><li>Conformance test (CTS) coverage and cost for each ask.</li><li>Which implementations already ship the feature, so how many devices a requirement would exclude.</li><li>Working-group intent or schedule (3.0 → 3.1 took ${M.provenance.docs['v3.0.19'].date} → ${M.provenance.docs['v3.1.0'].date}).</li><li>Whether a promotion would be required or optional: 3.1 did both (sub-groups required; some promoted items still gated by feature macros).</li></ul>`, 'CTS cost, implementation coverage, schedule, required-vs-optional are not in the sources.');
+    const picked = [...STATE.picks].sort().join('|');
+    const stored = (M.results||[]).filter(r => r.kind==='scenario' && r.asks.filter(a=>a.type==='promote').map(a=>a.ext).sort().join('|') === picked && picked);
+    if (stored.length) { const r = stored[0], t = {p:r.checks.filter(c=>c.pass===true).length, f:r.checks.filter(c=>c.pass===false).length};
+      out.unshift(`<div class="card" style="border-color:var(--acc)"><b>Already tested</b> ${lab('ex','tested')}: this exact set was run as <a href="#" onclick="STATE.res='${esc(r.id)}';show('results');return false"><code>${esc(r.id)}</code></a> — ${t.p} checks passed, ${t.f} failed (compile, ABI and registry checks on synthetic headers).${(M.concerns&&M.concerns.directions.find(d=>d.id===r.id))?` <a href="#" onclick="show('concerns');return false">Concerns raised by this direction</a>.`:''}</div>`); }
+    $('#brep').innerHTML = out.join(''); STATE.md = md.join('\n');
+  };
+  el.querySelectorAll('input[data-n]').forEach(c => c.onchange = () => { c.checked ? STATE.picks.add(c.dataset.n) : STATE.picks.delete(c.dataset.n); draw(); });
+  $('#bf').onchange = e => { STATE.optpick = e.target.value || null; draw(); };
+  $('#bcopy').onclick = () => { try { navigator.clipboard.writeText('# OpenCL 3.2 ask: consequence report\n\nGenerated from docs ' + last + '\n\n' + (STATE.md||'')); $('#bcopy').textContent = 'Copied'; } catch(e) { $('#bcopy').textContent = 'Copy failed'; } };
+  draw();
+  // precedent table
+  const pt = document.createElement('div'); pt.innerHTML = `<h2>Promotion precedent: what happened to the symbols ${lab('de','derived')}</h2><div class="card"><table><thead><tr><th>Extension</th><th>Promoted to</th><th>Ext symbols</th><th>Same name in core</th><th>Core name = ext name minus suffix</th></tr></thead><tbody>${M.precedent.map(p=>`<tr><td><code>${esc(p.ext)}</code></td><td>${p.to}</td><td>${p.symbols}</td><td>${p.same_name_in_core}</td><td>${p.n_renamed}${p.renamed_in_core.length?` <span class="mute small">e.g. ${esc(p.renamed_in_core[0][0])} → ${esc(p.renamed_in_core[0][1])}</span>`:''}</td></tr>`).join('')}</tbody></table><div class="small mute">Extensions promoted to OpenCL C only (no API symbols) are omitted. “Same name in core” + “renamed” can be less than “Ext symbols”: the remainder are symbols that match neither pattern.</div></div>`;
+  el.appendChild(pt);
+};
+
+
+
+// ---------- concerns raised by hypothetical 3.2 directions ----------
+VIEWS.concerns = el => {
+  const D = M.concerns;
+  if (!D) { el.innerHTML = '<p class="mute">No concerns data. Run <code>python3 tools/concerns.py</code> and rebuild.</p>'; return; }
+  const kinds = [['promote','Promote extensions into core'],['require','Make an optional feature required'],['deprecate','Deprecate']];
+  const srcCls = {TESTED:'ex',DERIVED:'de',HEURISTIC:'he',SAMPLE:'he','NOT KNOWABLE':'un'};
+  const lvlChip = l => chip(l, l==='high'?'removed':l==='notable'?'deprecated':'');
+  el.innerHTML = `${/^https?:$/.test(location.protocol)?'<div class="note">Want to weigh in? <a href="vote.html">Vote on these directions and concerns</a> (uses GitHub reactions).</div>':''}<p class="small mute">What each hypothetical direction for OpenCL 3.2 would raise, produced by rules over test results and extracted Khronos data. <b>This is evidence for a discussion, not a prediction or a Khronos plan.</b> Levels are rule-based: <b>high</b> = a hard failure, an unfinished (experimental or unratified) extension, or a forced requirement; <b>notable</b> = a large or cross-cutting effect; <b>info</b> = a fact worth knowing.</p>
+   ${D.sample?`<div class="card small"><b>Sample device</b> (one device read on the author's machine, not representative): ${esc(D.sample.name)} — SVM <code>${esc(D.sample.svm)}</code>, generic address space <code>${esc(D.sample.generic_address_space)}</code>, pipes <code>${esc(D.sample.pipes)}</code>, device enqueue <code>${esc(D.sample.device_enqueue)}</code>, non-uniform work-groups <code>${esc(D.sample.non_uniform_work_groups)}</code>, work-group collectives <code>${esc(D.sample.work_group_collectives)}</code>.</div>`:''}
+   <div class="bar" id="cfilt"><b>Level</b> ${['high','notable','info'].map(l=>`<label><input type="checkbox" data-l="${l}" ${STATE.cl.has(l)?'checked':''}> ${l}</label>`).join(' ')} &nbsp; <b>Source</b> ${['TESTED','DERIVED','HEURISTIC','SAMPLE','NOT KNOWABLE'].map(l=>`<label><input type="checkbox" data-s="${l}" ${STATE.cs.has(l)?'checked':''}> ${l.toLowerCase()}</label>`).join(' ')}</div>
+   <div id="cbody"></div>`;
+  const draw = () => {
+    $('#cbody').innerHTML = kinds.map(([k,t]) => { const ds = D.directions.filter(d=>d.kind===k); if(!ds.length) return '';
+      return `<h2>${t}</h2><div class="grid g2">${ds.map(d=>{
+        const cs = d.concerns.filter(c=>STATE.cl.has(c.level)&&STATE.cs.has(c.source));
+        const n = lv => d.concerns.filter(c=>c.level===lv).length;
+        return `<div class="card"><h3 style="margin-top:0">${esc(d.title)}</h3><div class="small mute">${esc(d.intent||'')}</div>
+          <div style="margin:6px 0">${n('high')?lvlChip('high')+' '+n('high')+' ':''}${n('notable')?lvlChip('notable')+' '+n('notable')+' ':''}${lvlChip('info')} ${n('info')} ${k==='promote'?`<span class="mute small"> · tests: ${d.passed} pass, ${d.failed} fail</span>`:''}</div>
+          <table><tbody>${cs.map(c=>`<tr><td style="width:62px">${lvlChip(c.level)}</td><td>${lab(srcCls[c.source]||'un', c.source.toLowerCase())}${esc(c.text)}</td></tr>`).join('')||'<tr><td class="mute">nothing at these filters</td></tr>'}</tbody></table>
+          <div class="mono small mute">${esc(d.id)} · <a href="#" onclick="STATE.res='${esc(d.id)}';show('results');return false">test details</a></div></div>`}).join('')}</div>`; }).join('');
+  };
+  el.querySelectorAll('input[data-l]').forEach(c => c.onchange = () => { c.checked ? STATE.cl.add(c.dataset.l) : STATE.cl.delete(c.dataset.l); draw(); });
+  el.querySelectorAll('input[data-s]').forEach(c => c.onchange = () => { c.checked ? STATE.cs.add(c.dataset.s) : STATE.cs.delete(c.dataset.s); draw(); });
+  draw();
+};
+
+// ---------- test results (stored runs of tools/workbench.py) ----------
+VIEWS.results = el => {
+  const R = M.results || [];
+  const sum = r => { const c = r.checks; return {p:c.filter(x=>x.pass===true).length, f:c.filter(x=>x.pass===false).length, n:c.filter(x=>x.pass===null).length, bad:c.filter(x=>x.as_expected===false).length}; };
+  if (!R.length) { el.innerHTML = '<p class="mute">No stored results. Run <code>python3 tools/workbench.py run</code> and rebuild.</p>'; return; }
+  if (!STATE.res || !R.find(r=>r.id===STATE.res)) STATE.res = R[0].id;
+  const cal = M.calibration;
+  el.innerHTML = `<p class="small mute">Runs of the back end (<code>tools/workbench.py</code>): hypothetical changes tested against the real headers and registry. Synthetic headers are hypothetical and are not Khronos artifacts. ${lab('ex','tested')} = compiled or checked by a script; ${lab('de','derived')} = rule findings. Results about other people's in-flight branches are not embedded in this page.</p>
+   ${cal?`<div class="card"><b>Calibration</b> ${lab('de','derived')}: replaying the real 3.1 promotions (${cal.promoted.length} extensions) through the naming rule predicted ${cal.predicted} names; ${cal.correct} are in the real 3.1 feature block. Not predicted: ${cal.in_3_1_but_not_predicted.map(x=>`<code>${esc(x)}</code>`).join(', ')||'none'} (not from a promotion).</div>`:''}
+   <div class="split" style="margin-top:12px"><div class="scroll"><table><thead><tr><th>Run</th><th>Kind</th><th>Pass</th><th>Fail</th></tr></thead><tbody>
+   ${R.map(r=>{const t=sum(r);return `<tr class="row ${r.id===STATE.res?'sel':''}" data-id="${esc(r.id)}"><td><b>${esc(r.id)}</b><div class="small mute">${esc(r.title)}</div></td><td>${r.kind}</td><td>${t.p}</td><td>${t.f?`<span class="chip deprecated">${t.f}</span>`:0}${t.bad?` <span class="chip removed" title="outcome differs from what the scenario expected">unexpected ${t.bad}</span>`:''}</td></tr>`}).join('')}
+   </tbody></table></div><div id="rdet" class="card"></div></div>`;
+  const draw = () => {
+    const r = R.find(x=>x.id===STATE.res), p = r.provenance;
+    const mark = c => c.pass===true?chip('PASS','ratified'):c.pass===false?chip('FAIL','removed'):chip('n/a','unratified');
+    $('#rdet').innerHTML = `<h3 style="margin-top:0">${esc(r.title)}</h3><div class="small mute">${esc(r.id)} · ${esc(p.when)} · docs ${esc(p.docs.tag)} @ ${esc(p.docs.commit.slice(0,8))} · headers ${esc(p.headers.ref)} @ ${esc(p.headers.commit.slice(0,8))} · ${esc(p.gcc)}</div>
+     ${r.intent?`<p class="small">${esc(r.intent)}</p>`:''}
+     <h3>Asks</h3><div>${r.asks.map(a=>chip(a.type+': '+(a.ext||a.feature||String(a.patch).split('/').pop()))).join('')}</div>
+     <h3>Tested ${lab('ex','tested')}</h3><table><tbody>${r.checks.map(c=>`<tr><td style="width:70px">${mark(c)}</td><td>${esc(c.title)}${c.as_expected===true?` <span class="mute small">(expected ${c.expected?'pass':'fail'})</span>`:''}${c.as_expected===false?` <span class="chip removed">unexpected: expected ${c.expected?'pass':'fail'}</span>`:''}<div class="small mute">${c.detail.map(esc).join('<br>')}</div><div class="mono small mute">${esc(c.item)}</div></td></tr>`).join('')}</tbody></table>
+     ${r.rules.findings.length?`<h3>Rule findings ${lab('de','derived')}</h3><table><tbody>${r.rules.findings.map(f=>`<tr><td style="width:70px">${chip(f.level,f.level==='fail'?'removed':f.level==='warn'?'deprecated':'')}</td><td>${esc(f.text)}<div class="mono small mute">${esc(f.item||'')}</div></td></tr>`).join('')}</tbody></table>`:''}
+     ${r.generated_diff&&Object.keys(r.generated_diff).length?`<h3>What the official generator changes</h3>${Object.entries(r.generated_diff).map(([f,v])=>`<div><code>${esc(f)}</code> +${v.added} / −${v.removed}<div class="small mono mute">${v.sample.slice(0,4).map(esc).join('<br>')}</div></div>`).join('')}`:''}
+     ${r.draft_appendix_h?`<h3>Draft appendix-H section</h3><div class="small mute">Generated from the feature sheet; a starting point, not spec text.</div><pre class="mono small card" style="white-space:pre-wrap">${esc(r.draft_appendix_h)}</pre>`:''}
+     <div class="note">Not modelled: ICD loader implementation, conformance tests, spec prose, OpenCL C built-ins, implementations.</div>`;
+  };
+  el.querySelectorAll('tr.row').forEach(tr => tr.onclick = () => { STATE.res = tr.dataset.id; el.querySelectorAll('tr.row').forEach(x=>x.classList.toggle('sel', x===tr)); draw(); syncHash(); });
+  draw();
+};
+
+// ---------- provenance & traps ----------
+VIEWS.prov = el => {
+  const rec = M.headers.reconcile;
+  el.innerHTML = `<h2>Sources ${lab('ex','extracted')}</h2><div class="grid g2"><div class="card"><b>OpenCL-Docs</b><div class="small mute">${T.length} tags with a registry</div><table><tbody>${T.map(t=>`<tr><td>${t}</td><td class="small mute">${M.provenance.docs[t].date}</td><td class="mono small">${M.provenance.docs[t].commit.slice(0,10)}</td></tr>`).join('')}</tbody></table></div>
+   <div class="card"><b>OpenCL-Headers</b><table><tbody>${M.provenance.headers.map(h=>`<tr><td>${h.ref}</td><td class="small mute">${h.date}</td><td class="mono small">${h.commit.slice(0,10)}</td><td>${h.symbols}</td></tr>`).join('')}</tbody></table></div></div>
+  <h2>Registry ↔ headers disagreements ${lab('de','derived')}</h2>
+  <div class="card"><table><thead><tr><th>Symbol</th><th>Registry feature</th><th>Header guard</th></tr></thead><tbody>${rec.map(r=>`<tr><td><code>${esc(r.name)}</code></td><td>${r.registry}</td><td>${esc(r.header_guard||'(unguarded)')}</td></tr>`).join('')}</tbody></table>
+  <div class="small mute">Out of all core enum/command symbols in the registry. Registry-only: <code>CL_KHRONOS_VENDOR_ID_POCL</code> is in the registry but not in any header. The three <code>CL_VERSION_*_BITS</code> macros are registry 3.0 but unguarded in the 3.1 headers.</div></div>
+  <h2>Traps found while building this ${lab('ex','recorded')}</h2><ul class="tight">
+   <li><b>An empty result was a bug, three times.</b> A listing helper given an empty path returned nothing; a symbol filter silently dropped real constants; a header-define pattern rejected <code>#define X (1 &lt;&lt; 0)</code>. Each was caught by a control that had to be positive in the same run.</li>
+   <li><b>Deprecation lives in three places</b> and no single one is complete: require-block comments, command <code>prefix/suffix</code> attributes in <code>cl.xml</code>, and <code>/* deprecated */</code> comments in headers. Un-deprecation (<code>CL_DEVICE_HOST_UNIFIED_MEMORY</code>, 3.1) is visible only in the header.</li>
+   <li><b>Filename ≠ content:</b> the registry served <code>OpenCL_Ext.pdf</code> as a byte-identical copy of the API PDF.</li>
+   <li><b>Header tags trail the spec:</b> headers <code>main</code> (${M.provenance.headers.at(-1).date}) is newer than the last header tag; it already carries <code>cl_khr_command_buffer</code> extension version 1.0.</li>
+   <li><b>Churn is mostly noise:</b> 3.0.19 → 3.1.0 touched 143 extension files; most changed by two lines or fewer (copyright year).</li></ul>`;
+};
+
+route();
+</script>
+</body>
+</html>

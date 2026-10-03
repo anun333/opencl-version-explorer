@@ -1,0 +1,16 @@
+{
+ "id": "x01-deprecate-pipes-and-device-enqueue",
+ "title": "Direction: deprecate pipes and device-side enqueue",
+ "intent": "Marking only: the spec says functionality is never removed in minor revisions.",
+ "asks": [
+  {
+   "type": "deprecate",
+   "symbols": [
+    "clCreatePipe",
+    "clGetPipeInfo",
+    "clSetDefaultDeviceCommandQueue"
+   ]
+  }
+ ],
+ "expect": {}
+}

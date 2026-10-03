@@ -1,0 +1,38 @@
+name: Publish the explorer to GitHub Pages
+
+# Publishes the prebuilt opencl-explorer.html as a static site. No build step, no server code.
+# Nothing happens until you push this repository to GitHub and choose
+# Settings > Pages > Build and deployment > Source: GitHub Actions.
+# Check the action versions below against the current ones when you publish.
+
+on:
+  push:
+    branches: [main]
+    paths: [opencl-explorer.html, tools/build_site.py, tools/vote_template.html, site-data/**, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the site folder
+        run: python3 tools/build_site.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

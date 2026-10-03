@@ -1,0 +1,717 @@
+{
+ "sample": {
+  "name": "AMD Radeon Graphics",
+  "svm": "CL_DEVICE_SVM_COARSE_GRAIN_BUFFER",
+  "generic_address_space": "CL_FALSE",
+  "pipes": "CL_FALSE",
+  "device_enqueue": "(none)",
+  "non_uniform_work_groups": "CL_FALSE",
+  "work_group_collectives": "CL_FALSE"
+ },
+ "directions": [
+  {
+   "id": "d01-graph-submission-family",
+   "title": "the whole command-buffer family",
+   "intent": "Command buffers plus mutable dispatch and multi-device: two of the three are experimental.",
+   "kind": "promote",
+   "passed": 8,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d01-5c4a4c48",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "2 experimental extension(s) would be frozen into core: cl_khr_command_buffer_mutable_dispatch, cl_khr_command_buffer_multi_device. The spec says of experimental extensions: \"features may be added, removed, or changed in non-backward compatible ways\" (appendix, Experimental Extensions)"
+    },
+    {
+     "id": "d01-79dfe9e9",
+     "level": "notable",
+     "source": "TESTED",
+     "text": "20 new commands: the ICD dispatch struct grows by 160 bytes (size 1200 -> 1360 (+160 bytes, expected +160)); every ICD loader and driver must add these entries, and existing offsets are unchanged"
+    },
+    {
+     "id": "d01-414f5e7d",
+     "level": "info",
+     "source": "TESTED",
+     "text": "8 of 8 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d01-3e6e1949",
+     "level": "info",
+     "source": "TESTED",
+     "text": "3 promoted struct type(s): core and extension structs become distinct types (tags renamed, as 3.1 did), so code passing one where the other is expected needs a cast or conversion"
+    },
+    {
+     "id": "d01-049ff46e",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "4403 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d01-9694e89a",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 3 name(s)"
+    },
+    {
+     "id": "d01-3daae7d3",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 0 of these 3 extensions"
+    },
+    {
+     "id": "d01-0557c980",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d02-interop-posix",
+   "title": "sync and memory interop, POSIX handle types",
+   "intent": "Semaphores and external memory with fd, dma-buf and sync-fd handle types.",
+   "kind": "promote",
+   "passed": 8,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d02-43a15cac",
+     "level": "notable",
+     "source": "TESTED",
+     "text": "10 new commands: the ICD dispatch struct grows by 80 bytes (size 1200 -> 1280 (+80 bytes, expected +80)); every ICD loader and driver must add these entries, and existing offsets are unchanged"
+    },
+    {
+     "id": "d02-689b0f4f",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "4 platform-specific extension(s) (OS or graphics-API handle types): cl_khr_external_semaphore_opaque_fd, cl_khr_external_semaphore_sync_fd, cl_khr_external_memory_opaque_fd, cl_khr_external_memory_dma_buf. Core would name handle types that only exist on some systems"
+    },
+    {
+     "id": "d02-23bf4520",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "5 other extension(s) depend on these and would need a core-version alternative in their `depends`: cl_img_external_semaphore_fast_path, cl_khr_external_memory_android_hardware_buffer, cl_khr_external_memory_win32, cl_khr_external_semaphore_dx_fence, cl_khr_external_semaphore_win32"
+    },
+    {
+     "id": "d02-05884cb6",
+     "level": "info",
+     "source": "TESTED",
+     "text": "8 of 8 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d02-742aa291",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3416 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d02-9db7cfbf",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 7 name(s)"
+    },
+    {
+     "id": "d02-7d439c95",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 0 of these 7 extensions"
+    },
+    {
+     "id": "d02-c3114132",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d03-interop-all-platforms",
+   "title": "interop including Windows, DirectX and Android handles",
+   "intent": "Everything in d02 plus win32, dx_fence and Android hardware buffer extensions (several are experimental).",
+   "kind": "promote",
+   "passed": 8,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d03-e6652c81",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "3 experimental extension(s) would be frozen into core: cl_khr_external_semaphore_win32, cl_khr_external_semaphore_dx_fence, cl_khr_external_memory_android_hardware_buffer. The spec says of experimental extensions: \"features may be added, removed, or changed in non-backward compatible ways\" (appendix, Experimental Extensions)"
+    },
+    {
+     "id": "d03-a954a081",
+     "level": "notable",
+     "source": "TESTED",
+     "text": "10 new commands: the ICD dispatch struct grows by 80 bytes (size 1200 -> 1280 (+80 bytes, expected +80)); every ICD loader and driver must add these entries, and existing offsets are unchanged"
+    },
+    {
+     "id": "d03-8bee780f",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "8 platform-specific extension(s) (OS or graphics-API handle types): cl_khr_external_semaphore_opaque_fd, cl_khr_external_semaphore_sync_fd, cl_khr_external_memory_opaque_fd, cl_khr_external_memory_dma_buf, cl_khr_external_memory_win32, cl_khr_external_semaphore_win32, cl_khr_external_semaphore_dx_fence, cl_khr_external_memory_android_hardware_buffer. Core would name handle types that only exist on some systems"
+    },
+    {
+     "id": "d03-ba67dd10",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "1 other extension(s) depend on these and would need a core-version alternative in their `depends`: cl_img_external_semaphore_fast_path"
+    },
+    {
+     "id": "d03-e1e18edc",
+     "level": "info",
+     "source": "TESTED",
+     "text": "8 of 8 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d03-71176eda",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "4342 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d03-03ccf23a",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 11 name(s)"
+    },
+    {
+     "id": "d03-15536eef",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 0 of these 11 extensions"
+    },
+    {
+     "id": "d03-b5875d3f",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d04-language-ratified",
+   "title": "ratified OpenCL C extensions only",
+   "intent": "Sub-group, async-copy, atomics and assumption extensions with no API symbols.",
+   "kind": "promote",
+   "passed": 4,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d04-c2e473e7",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "by name these extensions belong to optional-feature areas: Atomics / memory model, Sub-groups. Check how each behaves on devices without the corresponding optional feature"
+    },
+    {
+     "id": "d04-62de3ec6",
+     "level": "notable",
+     "source": "HEURISTIC",
+     "text": "spec text leans on optional features (keyword counts): Sub-groups 27. A promotion has to say what happens on devices lacking them"
+    },
+    {
+     "id": "d04-0063d5f7",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "language-only: no header change, so the real cost is OpenCL C compiler, built-in and SPIR-V work; the sources cannot measure it"
+    },
+    {
+     "id": "d04-8349f165",
+     "level": "info",
+     "source": "TESTED",
+     "text": "4 of 4 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d04-20fd6509",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "1536 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d04-5f8abf46",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 10 name(s)"
+    },
+    {
+     "id": "d04-901014c4",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 1 of these 10 extensions: cl_khr_expect_assume"
+    },
+    {
+     "id": "d04-018e2d53",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d05-float-atomics-unratified",
+   "title": "float atomics (an EXT extension that is not ratified)",
+   "intent": "The largest extension text in the registry, not ratified.",
+   "kind": "promote",
+   "passed": 7,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d05-63791b57",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "1 extension(s) without the registry's ratified attribute: cl_ext_float_atomics"
+    },
+    {
+     "id": "d05-57ae0483",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "by name these extensions belong to optional-feature areas: Atomics / memory model. Check how each behaves on devices without the corresponding optional feature"
+    },
+    {
+     "id": "d05-dfc16c9f",
+     "level": "notable",
+     "source": "HEURISTIC",
+     "text": "spec text leans on optional features (keyword counts): Atomics / memory model 404. A promotion has to say what happens on devices lacking them"
+    },
+    {
+     "id": "d05-c59077a7",
+     "level": "info",
+     "source": "TESTED",
+     "text": "7 of 7 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d05-8d7e96d4",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "4074 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d05-594a3b3f",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 1 name(s)"
+    },
+    {
+     "id": "d05-827b91fa",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 0 of these 1 extensions"
+    },
+    {
+     "id": "d05-d8f59ed1",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d06-queries-and-hints",
+   "title": "small device queries and hints",
+   "intent": "PCI bus info, priority and throttle hints, terminate context, initialize memory, kernel clock.",
+   "kind": "promote",
+   "passed": 8,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d06-7d2016f4",
+     "level": "info",
+     "source": "TESTED",
+     "text": "8 of 8 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d06-af5c144d",
+     "level": "info",
+     "source": "TESTED",
+     "text": "1 new commands: the ICD dispatch struct grows by 8 bytes (size 1200 -> 1208 (+8 bytes, expected +8)); every ICD loader and driver must add these entries, and existing offsets are unchanged"
+    },
+    {
+     "id": "d06-768dfa3c",
+     "level": "info",
+     "source": "TESTED",
+     "text": "1 promoted struct type(s): core and extension structs become distinct types (tags renamed, as 3.1 did), so code passing one where the other is expected needs a cast or conversion"
+    },
+    {
+     "id": "d06-10ca74e5",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "1056 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d06-96b7c502",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 6 name(s)"
+    },
+    {
+     "id": "d06-65286c1c",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 3 of these 6 extensions: cl_khr_pci_bus_info, cl_khr_priority_hints, cl_khr_kernel_clock"
+    },
+    {
+     "id": "d06-64aab8a2",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "d07-unified-svm",
+   "title": "unified shared virtual memory",
+   "intent": "Experimental, 48 symbols; SVM is optional since 3.0.",
+   "kind": "promote",
+   "passed": 8,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "d07-44f912b1",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "1 experimental extension(s) would be frozen into core: cl_khr_unified_svm. The spec says of experimental extensions: \"features may be added, removed, or changed in non-backward compatible ways\" (appendix, Experimental Extensions)"
+    },
+    {
+     "id": "d07-f63d082c",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "1 other extension(s) depend on these and would need a core-version alternative in their `depends`: cl_img_unified_svm_external_memory_dma_buf"
+    },
+    {
+     "id": "d07-45265325",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "by name these extensions belong to optional-feature areas: Shared Virtual Memory. Check how each behaves on devices without the corresponding optional feature"
+    },
+    {
+     "id": "d07-ea74c9b3",
+     "level": "info",
+     "source": "TESTED",
+     "text": "8 of 8 checks pass on synthetic 3.2 headers"
+    },
+    {
+     "id": "d07-a4a96787",
+     "level": "info",
+     "source": "TESTED",
+     "text": "4 new commands: the ICD dispatch struct grows by 32 bytes (size 1200 -> 1232 (+32 bytes, expected +32)); every ICD loader and driver must add these entries, and existing offsets are unchanged"
+    },
+    {
+     "id": "d07-013d08d7",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "243 words of extension spec text to merge into the API, C and SPIR-V specs; 3.0.19 to 3.1.0 touched 20 API-spec files and 143 extension files (many editorial)"
+    },
+    {
+     "id": "d07-1ccfd26b",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "3.1 requires devices to keep reporting promoted extension names; expect the same obligation for these 1 name(s)"
+    },
+    {
+     "id": "d07-b065030d",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "one real device (AMD Radeon Graphics) already reports 0 of these 1 extensions"
+    },
+    {
+     "id": "d07-d0317719",
+     "level": "info",
+     "source": "NOT KNOWABLE",
+     "text": "conformance-test coverage, driver and loader implementation effort, and working-group intent are outside the sources"
+    }
+   ]
+  },
+  {
+   "id": "r01-require-generic-address-space",
+   "title": "require the generic address space",
+   "intent": "Optional since 3.0.",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r01-34399be4",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Generic Address Space today"
+    },
+    {
+     "id": "r01-a567d752",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Generic Address Space: 1 appendix-H behaviours become dead branches for new-version devices, 1 OpenCL C macro(s) and 4 query(ies) become constant"
+    },
+    {
+     "id": "r01-70b52b50",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    },
+    {
+     "id": "r01-35e9e8e8",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "optional features that depend on Generic Address Space and would become easier to require next: Device-Side Enqueue, Pipes"
+    }
+   ]
+  },
+  {
+   "id": "r02-require-svm",
+   "title": "require shared virtual memory",
+   "intent": "Optional since 3.0.",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r02-6ad9043f",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Shared Virtual Memory: 6 appendix-H behaviours become dead branches for new-version devices, 0 OpenCL C macro(s) and 2 query(ies) become constant"
+    },
+    {
+     "id": "r02-a9ef9ba4",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    },
+    {
+     "id": "r02-7dfb62b7",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) supports Shared Virtual Memory today (reports CL_DEVICE_SVM_COARSE_GRAIN_BUFFER)"
+    }
+   ]
+  },
+  {
+   "id": "r03-require-work-group-collectives",
+   "title": "require work-group collective functions",
+   "intent": "Broadcast, scan, reduce.",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r03-7197f9db",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Work-group Collective Functions today"
+    },
+    {
+     "id": "r03-f74073e8",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Work-group Collective Functions: 1 appendix-H behaviours become dead branches for new-version devices, 1 OpenCL C macro(s) and 1 query(ies) become constant"
+    },
+    {
+     "id": "r03-c4b2286e",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    }
+   ]
+  },
+  {
+   "id": "r04-require-non-uniform-work-groups",
+   "title": "require non-uniform work-group sizes",
+   "intent": "",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r04-7aa4bd16",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Non-Uniform Work-groups today"
+    },
+    {
+     "id": "r04-94ba6fb3",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Non-Uniform Work-groups: 2 appendix-H behaviours become dead branches for new-version devices, 0 OpenCL C macro(s) and 1 query(ies) become constant"
+    },
+    {
+     "id": "r04-dcabcf33",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    }
+   ]
+  },
+  {
+   "id": "r05-require-device-enqueue",
+   "title": "require device-side enqueue",
+   "intent": "Optional since 3.0.",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r05-fd5f6098",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Device-Side Enqueue today"
+    },
+    {
+     "id": "r05-54ce6d35",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "appendix H says a device with Device-Side Enqueue must also support: Generic Address Space, Program Scope Global Variables; requiring it therefore also requires those"
+    },
+    {
+     "id": "r05-7c365bea",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Device-Side Enqueue: 9 appendix-H behaviours become dead branches for new-version devices, 3 OpenCL C macro(s) and 7 query(ies) become constant"
+    },
+    {
+     "id": "r05-6ca69dd6",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    }
+   ]
+  },
+  {
+   "id": "r06-2x-parity",
+   "title": "restore OpenCL 2.x parity",
+   "intent": "Require SVM, generic address space, work-group collectives, non-uniform work-groups, device-side enqueue and pipes together.",
+   "kind": "require",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "r06-dc663b23",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Generic Address Space today"
+    },
+    {
+     "id": "r06-07d74655",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Work-group Collective Functions today"
+    },
+    {
+     "id": "r06-30c73738",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Non-Uniform Work-groups today"
+    },
+    {
+     "id": "r06-00175f79",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Device-Side Enqueue today"
+    },
+    {
+     "id": "r06-70578206",
+     "level": "high",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) does NOT support Pipes today"
+    },
+    {
+     "id": "r06-65b7b753",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "appendix H says a device with Device-Side Enqueue must also support: Generic Address Space, Program Scope Global Variables; requiring it therefore also requires those"
+    },
+    {
+     "id": "r06-b8c3a560",
+     "level": "high",
+     "source": "DERIVED",
+     "text": "appendix H says a device with Pipes must also support: Generic Address Space; requiring it therefore also requires those"
+    },
+    {
+     "id": "r06-35ffd16d",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Shared Virtual Memory: 6 appendix-H behaviours become dead branches for new-version devices, 0 OpenCL C macro(s) and 2 query(ies) become constant"
+    },
+    {
+     "id": "r06-42689c6c",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Generic Address Space: 1 appendix-H behaviours become dead branches for new-version devices, 1 OpenCL C macro(s) and 4 query(ies) become constant"
+    },
+    {
+     "id": "r06-1bb54280",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Work-group Collective Functions: 1 appendix-H behaviours become dead branches for new-version devices, 1 OpenCL C macro(s) and 1 query(ies) become constant"
+    },
+    {
+     "id": "r06-63f019bf",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Non-Uniform Work-groups: 2 appendix-H behaviours become dead branches for new-version devices, 0 OpenCL C macro(s) and 1 query(ies) become constant"
+    },
+    {
+     "id": "r06-81a6812d",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Device-Side Enqueue: 9 appendix-H behaviours become dead branches for new-version devices, 3 OpenCL C macro(s) and 7 query(ies) become constant"
+    },
+    {
+     "id": "r06-86da9b0d",
+     "level": "notable",
+     "source": "DERIVED",
+     "text": "Pipes: 4 appendix-H behaviours become dead branches for new-version devices, 2 OpenCL C macro(s) and 4 query(ies) become constant"
+    },
+    {
+     "id": "r06-af7288e1",
+     "level": "notable",
+     "source": "NOT KNOWABLE",
+     "text": "how many shipping devices and drivers would lose the ability to claim the new version; conformance-test cost; vendor appetite"
+    },
+    {
+     "id": "r06-4c0da60f",
+     "level": "info",
+     "source": "SAMPLE",
+     "text": "the sample device (AMD Radeon Graphics) supports Shared Virtual Memory today (reports CL_DEVICE_SVM_COARSE_GRAIN_BUFFER)"
+    },
+    {
+     "id": "r06-89c3c887",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "optional features that depend on Generic Address Space and would become easier to require next: Device-Side Enqueue, Pipes"
+    }
+   ]
+  },
+  {
+   "id": "x01-deprecate-pipes-and-device-enqueue",
+   "title": "deprecate pipes and device-side enqueue",
+   "intent": "Marking only: the spec says functionality is never removed in minor revisions.",
+   "kind": "deprecate",
+   "passed": 1,
+   "failed": 0,
+   "concerns": [
+    {
+     "id": "x01-76f509d5",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "clCreatePipe (core since 2.0): named in 1 appendix-H behaviour row(s) [Pipes]; used by extensions: none"
+    },
+    {
+     "id": "x01-b5084c8b",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "clGetPipeInfo (core since 2.0): named in 1 appendix-H behaviour row(s) [Pipes]; used by extensions: none"
+    },
+    {
+     "id": "x01-73ca2e94",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "clSetDefaultDeviceCommandQueue (core since 2.1): named in 2 appendix-H behaviour row(s) [Device-Side Enqueue]; used by extensions: none"
+    },
+    {
+     "id": "x01-c7b49372",
+     "level": "info",
+     "source": "DERIVED",
+     "text": "deprecation is marking only: the spec states \"Clarified that functionality will never be removed in minor OpenCL specification revisions.\". Of the 12 commands the registry already marks deprecated, 12 are still declared in the current headers and 12 still have a slot in the ICD dispatch table"
+    }
+   ]
+  }
+ ]
+}

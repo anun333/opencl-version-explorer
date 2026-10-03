@@ -1,0 +1,32 @@
+{
+ "id": "d06-queries-and-hints",
+ "title": "Direction: small device queries and hints",
+ "intent": "PCI bus info, priority and throttle hints, terminate context, initialize memory, kernel clock.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_pci_bus_info"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_priority_hints"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_throttle_hints"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_terminate_context"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_initialize_memory"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_kernel_clock"
+  }
+ ],
+ "expect": {}
+}

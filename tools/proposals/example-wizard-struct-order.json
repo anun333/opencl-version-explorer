@@ -1,0 +1,52 @@
+{
+ "id": "example-wizard-struct-order",
+ "title": "Example: structure listed before the type it uses; the wizard orders them (wizard)",
+ "extension": {
+  "name": "cl_zzdemo_wizard_struct_order",
+  "revision": "0.1.0",
+  "depends": "CL_VERSION_3_0",
+  "condition": "defined(CL_VERSION_3_0)",
+  "experimental": false
+ },
+ "types": [
+  {
+   "name": "cl_demo_info_zzdemo",
+   "members": [
+    "cl_demo_kind_zzdemo kind",
+    "cl_uint count"
+   ]
+  },
+  {
+   "name": "cl_demo_kind_zzdemo",
+   "base": "cl_uint"
+  }
+ ],
+ "enums": [
+  {
+   "name": "CL_DEVICE_DEMO_STRUCT_QUERY_ZZDEMO",
+   "value": "0x7F01",
+   "group": "cl_device_info",
+   "vendor": "ZZDemo"
+  }
+ ],
+ "commands": [
+  {
+   "name": "clGetDemoStructZZDEMO",
+   "ret": "cl_int",
+   "params": [
+    "cl_device_id device",
+    "cl_demo_info_zzdemo* info"
+   ]
+  }
+ ],
+ "feature": {
+  "title": "Demo structure query",
+  "queries": [
+   "CL_DEVICE_DEMO_STRUCT_QUERY_ZZDEMO"
+  ],
+  "macros": [],
+  "absent": {
+   "clGetDemoStructZZDEMO": "CL_INVALID_OPERATION"
+  }
+ }
+}

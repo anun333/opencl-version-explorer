@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenCL 3.2 Directions: Vote</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%230b6bcb%27/%3E%3Cpath d=%27M4 9l3 3 5-7%27 stroke=%27white%27 stroke-width=%271.8%27 fill=%27none%27/%3E%3C/svg%3E">
+<style>
+:root{--bg:#fbfbfa;--panel:#fff;--ink:#1d2226;--mute:#5d6870;--line:#dfe3e6;--acc:#0b6bcb;--acc2:#e8f1fb;--ok:#1a7f4b;--warn:#a85d00;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#121517;--panel:#1a1e21;--ink:#e6e9eb;--mute:#97a2a9;--line:#2c3236;--acc:#6db2ff;--acc2:#16283a;--ok:#4cc38a;--warn:#e0a24a;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel)}h1{font-size:17px;margin:0}
+main{padding:16px;max-width:1100px;margin:0 auto}h2{font-size:16px;margin:20px 0 8px}h3{font-size:14px;margin:0 0 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;margin:10px 0}
+.mute{color:var(--mute)}.small{font-size:12px}
+.chip{display:inline-block;border-radius:10px;padding:0 8px;font-size:11px;margin-right:6px;background:var(--acc2);color:var(--acc)}
+.high{background:#fbe9e7;color:var(--bad)}.notable{background:#fff3df;color:var(--warn)}@media (prefers-color-scheme:dark){.high{background:#3a1f1d}.notable{background:#3a2f1a}}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:8px 0;border-top:1px solid var(--line);align-items:start}
+.votes{white-space:nowrap;text-align:right;font-size:13px}.votes b{display:block;font-size:15px}
+a{color:var(--acc)}button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.note{border-left:3px solid var(--line);padding:2px 10px;color:var(--mute);font-size:12px;margin:8px 0}
+footer{max-width:1100px;margin:8px auto 28px;padding:10px 16px 0;color:var(--mute);font-size:12px;border-top:1px solid var(--line)}
+.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<header><h1>OpenCL 3.2 directions: what do you think?</h1>
+<div class="small mute">A companion to the <a href="index.html">OpenCL Version Explorer</a>. Independent; not from Khronos, and not a Khronos plan.</div></header>
+<main>
+<div class="card">
+  <b>How voting works.</b> Each direction below is a GitHub issue, and each concern is a comment on it. You vote with a <b>GitHub reaction</b> on that issue or comment: open it with the link and click 👍 or 👎. You need a (free) GitHub account; counts here refresh when the page reloads.
+  <ul class="small" style="margin:6px 0 0 18px">
+    <li>On a <b>direction</b>: 👍 = I would want this explored for a future version; 👎 = I would not.</li>
+    <li>On a <b>concern</b>: 👍 = I agree this is a real concern; 👎 = I don't think so, or I think it is wrong. If you think it is wrong, say why in a reply.</li>
+  </ul>
+  <div class="note">This is an informal, unweighted poll. Anyone with a GitHub account can react, one reaction per person per item, and it carries no authority. The concern text is generated from Khronos's public files by <a href="index.html#concerns">the explorer</a>; lines it cannot judge (what is "not knowable") are shown but not voted on.</div>
+</div>
+<div class="bar"><label>Sort concerns <select id="sort"><option value="order">as generated</option><option value="net">by net votes</option></select></label>
+  <label>Show <select id="lvl"><option value="all">high and notable</option><option value="high">high only</option></select></label><span id="status" class="small mute"></span></div>
+<div id="summary"></div>
+<div id="out"></div>
+</main>
+<footer>Data derived from the Khronos Group repositories OpenCL-Docs and OpenCL-Headers (see <a href="index.html">the explorer's footer</a> and CREDITS.md). Independent; not affiliated with or endorsed by Khronos. OpenCL is a trademark of Apple Inc. used under license by Khronos. Built with AI assistance. Votes are GitHub reactions and are subject to GitHub's terms.</footer>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const VOTABLE = c => (c.level === 'high' || c.level === 'notable') && c.source !== 'NOT KNOWABLE';
+let DATA = null, CFG = {repo: ''}, LIVE = {issues: {}, items: {}}, ERR = null;
+function apiBase(){ const q = new URLSearchParams(location.search).get('api'); return (q && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) ? q : 'https://api.github.com'; }
+async function getAll(url){ let out = []; for (let p = 1; p <= 6; p++) { const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'per_page=100&page=' + p, {headers: {Accept: 'application/vnd.github+json'}}); if (!r.ok) throw new Error('GitHub API ' + r.status); const j = await r.json(); out = out.concat(j); if (j.length < 100) break; } return out; }
+async function loadVotes(){
+  if (!CFG.repo) { ERR = 'This copy of the page is not connected to a repository, so vote counts are not shown.'; return; }
+  const key = 'votes:' + CFG.repo; try { const c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < 300000) { LIVE = c.v; return; } } catch(e) {}
+  try {
+    const base = apiBase() + '/repos/' + CFG.repo, owner = CFG.repo.split('/')[0];
+    const [issues, comments] = await Promise.all([getAll(base + '/issues?state=all'), getAll(base + '/issues/comments')]);
+    LIVE = {issues: {}, items: {}};
+    issues.filter(i => !i.pull_request && i.user && i.user.login === owner).forEach(i => { const m = /<!-- vote-direction: ([\w-]+) -->/.exec(i.body || ''); if (m) LIVE.issues[m[1]] = {url: i.html_url, up: i.reactions['+1'], down: i.reactions['-1']}; });
+    comments.filter(c => c.user && c.user.login === owner).forEach(c => { const m = /<!-- vote-item: ([\w-]+) -->/.exec(c.body || ''); if (m) LIVE.items[m[1]] = {url: c.html_url, up: c.reactions['+1'], down: c.reactions['-1']}; });
+    try { sessionStorage.setItem(key, JSON.stringify({t: Date.now(), v: LIVE})); } catch(e) {}
+  } catch (e) { ERR = 'Vote counts are unavailable right now (' + e.message + '; GitHub limits anonymous requests). The links still work for voting; reload in a few minutes for counts.'; }
+}
+const net = v => v ? v.up - v.down : 0;
+const votes = (v, fallbackUrl) => v ? `<div class="votes"><b>${v.up - v.down >= 0 ? '+' : ''}${v.up - v.down}</b>👍 ${v.up} · 👎 ${v.down}<br><a href="${esc(v.url)}" target="_blank" rel="noopener">vote on GitHub</a></div>` : `<div class="votes small mute">${fallbackUrl ? `<a href="${esc(fallbackUrl)}" target="_blank" rel="noopener">vote on GitHub</a>` : 'not yet open for voting'}</div>`;
+function draw(){
+  const sort = $('#sort').value, lvl = $('#lvl').value, repoUrl = CFG.repo ? 'https://github.com/' + CFG.repo + '/issues' : '';
+  $('#status').textContent = ERR || (CFG.repo ? 'Counts from GitHub reactions on ' + CFG.repo + '.' : '');
+  $('#status').className = 'small ' + (ERR ? 'err' : 'mute');
+  const all = DATA.directions.flatMap(d => d.concerns.filter(VOTABLE).map(c => ({d, c, v: LIVE.items[c.id]})));
+  const voted = all.filter(x => x.v && (x.v.up + x.v.down) > 0);
+  const dirs = DATA.directions.map(d => ({d, v: LIVE.issues[d.id]})).filter(x => x.v && (x.v.up + x.v.down) > 0).sort((a, b) => net(b.v) - net(a.v));
+  const top = voted.slice().sort((a, b) => net(b.v) - net(a.v)).slice(0, 5), disputed = voted.filter(x => x.v.up > 0 && x.v.down > 0).sort((a, b) => Math.min(b.v.up, b.v.down) - Math.min(a.v.up, a.v.down)).slice(0, 5);
+  $('#summary').innerHTML = voted.length || dirs.length ? `<h2>Outcomes so far</h2><div class="card">
+    ${dirs.length ? `<b>Directions by support</b><ol class="small">${dirs.map(x => `<li>${esc(x.d.title)}: ${net(x.v) >= 0 ? '+' : ''}${net(x.v)} (👍 ${x.v.up} · 👎 ${x.v.down})</li>`).join('')}</ol>` : ''}
+    ${top.length ? `<b>Concerns most agreed with</b><ol class="small">${top.map(x => `<li>${esc(x.d.title)}: ${esc(x.c.text.slice(0, 110))}… (${net(x.v) >= 0 ? '+' : ''}${net(x.v)})</li>`).join('')}</ol>` : ''}
+    ${disputed.length ? `<b>Most disputed concerns</b><ol class="small">${disputed.map(x => `<li>${esc(x.d.title)}: ${esc(x.c.text.slice(0, 110))}… (👍 ${x.v.up} · 👎 ${x.v.down})</li>`).join('')}</ol>` : ''}</div>` : `<div class="note">No votes yet. Be the first: open a direction below and react on GitHub.</div>`;
+  const kinds = [['promote', 'Promote extensions into core'], ['require', 'Make an optional feature required'], ['deprecate', 'Deprecate']];
+  $('#out').innerHTML = kinds.map(([k, t]) => { const ds = DATA.directions.filter(d => d.kind === k); if (!ds.length) return '';
+    return `<h2>${t}</h2>` + ds.map(d => {
+      let cs = d.concerns.filter(VOTABLE).filter(c => lvl === 'all' || c.level === 'high').map(c => ({c, v: LIVE.items[c.id]}));
+      if (sort === 'net') cs = cs.sort((a, b) => net(b.v) - net(a.v));
+      const facts = d.concerns.filter(c => !VOTABLE(c));
+      const dv = LIVE.issues[d.id];
+      return `<div class="card"><div class="row" style="border-top:0;padding-top:0"><div><h3>${esc(d.title)}</h3><div class="small mute">${esc(d.intent || '')}</div><div class="small" style="margin-top:4px"><b>Would you want this explored?</b></div></div>${votes(dv, repoUrl)}</div>
+        ${cs.map(({c, v}) => `<div class="row"><div><span class="chip ${c.level}">${c.level}</span><span class="chip">${esc(c.source.toLowerCase())}</span>${esc(c.text)}</div>${votes(v, repoUrl)}</div>`).join('') || '<div class="small mute">No concerns at this filter.</div>'}
+        ${facts.length ? `<details style="margin-top:6px"><summary class="small mute">${facts.length} facts and unknowns (not voted on)</summary>${facts.map(c => `<div class="small mute" style="padding:3px 0">${esc(c.source.toLowerCase())}: ${esc(c.text)}</div>`).join('')}</details>` : ''}</div>`; }).join(''); }).join('');
+}
+(async () => {
+  try { CFG = await (await fetch('config.json')).json(); } catch(e) {}
+  try { DATA = await (await fetch('concerns.json')).json(); } catch(e) { $('#out').innerHTML = '<div class="card err">Could not load concerns.json.</div>'; return; }
+  await loadVotes(); draw(); $('#sort').onchange = $('#lvl').onchange = draw;
+})();
+</script>
+</body>
+</html>

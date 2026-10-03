@@ -1,0 +1,12 @@
+{
+ "id": "r03-require-work-group-collectives",
+ "title": "Direction: require work-group collective functions",
+ "intent": "Broadcast, scan, reduce.",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Work-group Collective Functions"
+  }
+ ],
+ "expect": {}
+}

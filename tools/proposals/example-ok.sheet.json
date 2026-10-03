@@ -1,0 +1,13 @@
+{
+ "feature": "Demo optional query",
+ "extension": "cl_zzdemo_optional_query",
+ "queries": [
+  "CL_DEVICE_DEMO_QUERY_ZZDEMO"
+ ],
+ "macros": [
+  "__opencl_c_zzdemo"
+ ],
+ "absent": {
+  "clGetDemoInfoZZDEMO": "CL_INVALID_OPERATION"
+ }
+}

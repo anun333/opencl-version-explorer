@@ -1,0 +1,36 @@
+{
+ "id": "d02-interop-posix",
+ "title": "Direction: sync and memory interop, POSIX handle types",
+ "intent": "Semaphores and external memory with fd, dma-buf and sync-fd handle types.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_semaphore"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_opaque_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_semaphore_sync_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_opaque_fd"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_external_memory_dma_buf"
+  }
+ ],
+ "expect": {}
+}

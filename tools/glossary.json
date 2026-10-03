@@ -1,0 +1,345 @@
+[
+ {
+  "term": "OpenCL",
+  "aliases": [],
+  "plain": "An open standard for running programs (called kernels) on GPUs, CPUs and other processors, from many different makers.",
+  "where": "Specification: The OpenCL Specification (API)."
+ },
+ {
+  "term": "Khronos",
+  "aliases": [],
+  "plain": "The industry group (a non-profit consortium) that writes and publishes OpenCL and other standards such as Vulkan and SPIR-V.",
+  "where": "khronos.org"
+ },
+ {
+  "term": "specification",
+  "aliases": [
+   "spec"
+  ],
+  "plain": "The official text that defines OpenCL. It comes in parts: the API spec, the OpenCL C spec, and the SPIR-V environment spec.",
+  "where": "github.com/KhronosGroup/OpenCL-Docs"
+ },
+ {
+  "term": "API",
+  "aliases": [],
+  "plain": "The set of C functions and constants a program calls to use OpenCL, such as clCreateBuffer.",
+  "where": "API spec, chapters on the platform layer and runtime."
+ },
+ {
+  "term": "OpenCL C",
+  "aliases": [],
+  "plain": "The language the small programs that run on the device (kernels) are written in. It has its own versions, such as 1.2 and 3.0.",
+  "where": "OpenCL C spec."
+ },
+ {
+  "term": "kernel",
+  "aliases": [
+   "kernels"
+  ],
+  "plain": "A function written in OpenCL C that runs on the device, usually many copies at once.",
+  "where": "API spec, Execution Model."
+ },
+ {
+  "term": "platform",
+  "aliases": [],
+  "plain": "One vendor's OpenCL implementation installed on a machine. A platform exposes one or more devices.",
+  "where": "API spec, Platform Model."
+ },
+ {
+  "term": "device",
+  "aliases": [
+   "devices"
+  ],
+  "plain": "A processor OpenCL can run kernels on, such as a GPU.",
+  "where": "API spec, Platform Model."
+ },
+ {
+  "term": "driver",
+  "aliases": [],
+  "plain": "The software from a hardware maker that implements OpenCL for its devices.",
+  "where": ""
+ },
+ {
+  "term": "registry",
+  "aliases": [
+   "cl.xml"
+  ],
+  "plain": "A machine-readable file (xml/cl.xml) listing every OpenCL function, constant, type and extension, with their versions and dependencies. Tools generate parts of the C headers from it.",
+  "where": "OpenCL-Docs repo, xml/cl.xml."
+ },
+ {
+  "term": "header",
+  "aliases": [
+   "headers"
+  ],
+  "plain": "The C files a program includes (for example CL/cl.h) that declare the OpenCL functions and constants.",
+  "where": "OpenCL-Headers repo."
+ },
+ {
+  "term": "extension",
+  "aliases": [
+   "extensions"
+  ],
+  "plain": "An optional add-on to OpenCL with its own name, such as cl_khr_semaphore. A device reports which extensions it supports; a program checks before using one.",
+  "where": "API spec, appendix on extensions."
+ },
+ {
+  "term": "KHR",
+  "aliases": [
+   "EXT"
+  ],
+  "plain": "Name prefixes that show who defined an extension: KHR means approved by the Khronos working group, EXT means a multi-vendor extension, and a company name means a single vendor's.",
+  "where": "API spec, extension naming conventions."
+ },
+ {
+  "term": "core",
+  "aliases": [],
+  "plain": "What a device claiming a given OpenCL version must provide, apart from the features that version makes optional. The opposite of an extension.",
+  "where": "API spec."
+ },
+ {
+  "term": "promoted",
+  "aliases": [
+   "promotion",
+   "promote"
+  ],
+  "plain": "An extension whose features were moved into core in a later version. The extension name still exists and devices keep reporting it, but programs can now rely on the core version.",
+  "where": "Registry attribute promotedto."
+ },
+ {
+  "term": "ratified",
+  "aliases": [],
+  "plain": "A registry label meaning the Khronos working group formally approved the extension as final.",
+  "where": "Registry attribute ratified."
+ },
+ {
+  "term": "experimental",
+  "aliases": [],
+  "plain": "An extension marked as still changing. The spec says its features may be added, removed, or changed in non-backward compatible ways.",
+  "where": "API spec, Experimental Extensions."
+ },
+ {
+  "term": "unratified",
+  "aliases": [],
+  "plain": "Used here for an extension that has no ratified label in the registry. That includes all vendor extensions and some drafts.",
+  "where": "This tool's definition, from the registry."
+ },
+ {
+  "term": "deprecated",
+  "aliases": [
+   "deprecation"
+  ],
+  "plain": "Still present but discouraged. The spec says functionality is never removed in minor versions, so deprecated items stay in the headers.",
+  "where": "API spec, change log (v3.0.17)."
+ },
+ {
+  "term": "optional feature",
+  "aliases": [
+   "optional features"
+  ],
+  "plain": "Since OpenCL 3.0, many features that earlier versions required (shared virtual memory, pipes, device-side enqueue and others) are optional. A device says whether it supports each one.",
+  "where": "API spec, appendix H."
+ },
+ {
+  "term": "appendix H",
+  "aliases": [],
+  "plain": "The part of the API spec that lists each optional feature, how to detect it, and what each function does when the feature is absent.",
+  "where": "API spec, OpenCL 3.0 Backwards Compatibility."
+ },
+ {
+  "term": "feature macro",
+  "aliases": [
+   "feature macros"
+  ],
+  "plain": "A name such as __opencl_c_subgroups that the OpenCL C compiler defines when it supports an optional language feature.",
+  "where": "OpenCL C spec."
+ },
+ {
+  "term": "query",
+  "aliases": [
+   "queries"
+  ],
+  "plain": "A question a program asks about a device or platform, such as clGetDeviceInfo with a constant naming what to ask.",
+  "where": "API spec, Querying Devices."
+ },
+ {
+  "term": "CL_TARGET_OPENCL_VERSION",
+  "aliases": [
+   "target version"
+  ],
+  "plain": "A setting a programmer defines before including the headers to choose which OpenCL version's functions are visible, such as 300 for 3.0.",
+  "where": "OpenCL-Headers, CL/cl_version.h."
+ },
+ {
+  "term": "header guard",
+  "aliases": [
+   "guard"
+  ],
+  "plain": "A preprocessor condition in a header (such as #ifdef CL_VERSION_3_1) that makes declarations visible only when the chosen target version is high enough.",
+  "where": "OpenCL-Headers."
+ },
+ {
+  "term": "ICD",
+  "aliases": [
+   "ICD loader",
+   "installable client driver"
+  ],
+  "plain": "The system that lets several vendors' OpenCL drivers live on one machine. A small loader library forwards each call to the right driver.",
+  "where": "Extension cl_khr_icd."
+ },
+ {
+  "term": "dispatch table",
+  "aliases": [
+   "dispatch struct"
+  ],
+  "plain": "The list of function pointers (cl_icd_dispatch) the ICD loader uses to forward calls. Its order is fixed, so new functions are added at the end.",
+  "where": "OpenCL-Headers, CL/cl_icd.h."
+ },
+ {
+  "term": "ABI",
+  "aliases": [],
+  "plain": "Application binary interface: the exact memory layout and call conventions that compiled programs and drivers rely on. Changing it can break software that was built earlier.",
+  "where": ""
+ },
+ {
+  "term": "SPIR-V",
+  "aliases": [
+   "IL"
+  ],
+  "plain": "A compact binary format for kernels, an alternative to shipping OpenCL C source. IL means intermediate language.",
+  "where": "SPIR-V environment spec."
+ },
+ {
+  "term": "work-group",
+  "aliases": [
+   "work-groups"
+  ],
+  "plain": "A group of kernel copies (work-items) that can synchronise and share fast local memory.",
+  "where": "API spec, Execution Model."
+ },
+ {
+  "term": "sub-group",
+  "aliases": [
+   "sub-groups",
+   "subgroup",
+   "subgroups"
+  ],
+  "plain": "A smaller set of work-items inside a work-group that run closely together and can exchange data directly.",
+  "where": "API spec, Execution Model."
+ },
+ {
+  "term": "SVM",
+  "aliases": [
+   "shared virtual memory"
+  ],
+  "plain": "Shared virtual memory: memory the host program and the device can both access through the same pointers. Optional since OpenCL 3.0.",
+  "where": "API spec, Shared Virtual Memory."
+ },
+ {
+  "term": "generic address space",
+  "aliases": [],
+  "plain": "An OpenCL C feature that lets one pointer type refer to memory in several address spaces. Optional since 3.0; device-side enqueue and pipes depend on it.",
+  "where": "OpenCL C spec; appendix H."
+ },
+ {
+  "term": "device-side enqueue",
+  "aliases": [],
+  "plain": "Letting a kernel on the device start other kernels without going back to the host. Optional since 3.0.",
+  "where": "API spec; appendix H."
+ },
+ {
+  "term": "pipe",
+  "aliases": [
+   "pipes"
+  ],
+  "plain": "A first-in first-out memory object kernels use to pass data to each other. Optional since 3.0.",
+  "where": "API spec, Pipes."
+ },
+ {
+  "term": "command buffer",
+  "aliases": [
+   "command buffers"
+  ],
+  "plain": "A recorded list of commands that can be submitted many times, like a saved graph of work. Defined by the extension cl_khr_command_buffer.",
+  "where": "Extension cl_khr_command_buffer."
+ },
+ {
+  "term": "semaphore",
+  "aliases": [
+   "semaphores"
+  ],
+  "plain": "A synchronisation object that can order work between queues, or between OpenCL and other APIs. Defined by cl_khr_semaphore.",
+  "where": "Extension cl_khr_semaphore."
+ },
+ {
+  "term": "profile",
+  "aliases": [
+   "FULL_PROFILE",
+   "EMBEDDED_PROFILE"
+  ],
+  "plain": "FULL_PROFILE is the complete feature set; EMBEDDED_PROFILE lets small devices omit some requirements.",
+  "where": "API spec, OpenCL profiles."
+ },
+ {
+  "term": "conformance tests",
+  "aliases": [
+   "CTS"
+  ],
+  "plain": "The Khronos test suite an implementation must pass before it may call itself conformant. This tool does not run it and cannot say what a change would cost it.",
+  "where": "github.com/KhronosGroup/OpenCL-CTS"
+ },
+ {
+  "term": "spec tag",
+  "aliases": [
+   "tag"
+  ],
+  "plain": "A named, fixed point in the specification's history, such as v3.1.2.",
+  "where": "OpenCL-Docs repo tags."
+ },
+ {
+  "term": "refpage",
+  "aliases": [
+   "reference page"
+  ],
+  "plain": "The spec's self-contained page for one function or constant.",
+  "where": "API spec."
+ },
+ {
+  "term": "synthetic header",
+  "aliases": [
+   "synthetic headers"
+  ],
+  "plain": "A hypothetical version of the headers this tool generates to test an idea. It is not a Khronos file.",
+  "where": "This tool."
+ },
+ {
+  "term": "extracted",
+  "aliases": [],
+  "plain": "Read directly from a Khronos source file by a script. It cannot drift; rerun the script and it is true again or the script fails.",
+  "where": "This tool."
+ },
+ {
+  "term": "derived",
+  "aliases": [],
+  "plain": "Computed by a stated rule from extracted data. Check the rule if you doubt the result.",
+  "where": "This tool."
+ },
+ {
+  "term": "heuristic",
+  "aliases": [],
+  "plain": "A keyword or pattern guess. A pointer for reading, not a verdict. Counts can be too high or too low.",
+  "where": "This tool."
+ },
+ {
+  "term": "sample",
+  "aliases": [],
+  "plain": "A fact read from one real device on the author's machine. One device is not representative.",
+  "where": "This tool."
+ },
+ {
+  "term": "not knowable",
+  "aliases": [],
+  "plain": "Something the public sources cannot tell you, such as test cost, which devices ship what, or working-group intent.",
+  "where": "This tool."
+ }
+]

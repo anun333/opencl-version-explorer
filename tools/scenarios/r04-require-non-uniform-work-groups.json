@@ -1,0 +1,12 @@
+{
+ "id": "r04-require-non-uniform-work-groups",
+ "title": "Direction: require non-uniform work-group sizes",
+ "intent": "",
+ "asks": [
+  {
+   "type": "require",
+   "feature": "Non-Uniform Work-groups"
+  }
+ ],
+ "expect": {}
+}

@@ -1,0 +1,48 @@
+{
+ "id": "d04-language-ratified",
+ "title": "Direction: ratified OpenCL C extensions only",
+ "intent": "Sub-group, async-copy, atomics and assumption extensions with no API symbols.",
+ "asks": [
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_ballot"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_non_uniform_vote"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_non_uniform_arithmetic"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_subgroup_clustered_reduce"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_work_group_uniform_arithmetic"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_expect_assume"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_extended_async_copies"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_async_work_group_copy_fence"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_int64_base_atomics"
+  },
+  {
+   "type": "promote",
+   "ext": "cl_khr_int64_extended_atomics"
+  }
+ ],
+ "expect": {}
+}
