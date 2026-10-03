@@ -7,7 +7,7 @@
 
 **Voting was taken down on 2026-10-03.** The vote page, its data files and the 54 poll issues (14 directions, 40 concerns) were removed, and the explorer no longer links to them. The code is kept so it can be switched back on (below). Nothing had been voted on or replied to when it was removed.
 
-**Appendix H wording is not published.** The *Optional features* tab shows names, counts and a link to the specification's appendix H, not the appendix's tables or prose, because that source file states no licence (see `CREDITS.md`). `tools/build_viewer.py` enforces this: it refuses to build if known appendix H sentences are in the page, unless you set `KEEP_APPENDIX_H=1` for a private build.
+**Appendix H wording is shown, with attribution.** The *Optional features* tab shows appendix H's tables and prose under CC BY 4.0, relying on the repository's `LICENSE` and README (the file itself has no licence header; 119 of 122 sibling files do). `CREDITS.md` has the reasoning and the list of changes made to the text. To withhold the wording again (names, counts and a link to the spec stay), build with `WITHHOLD_APPENDIX_H=1 python3 tools/build_viewer.py`, rebuild the site and push. A short licence question to the maintainers, asking them to confirm and add the missing headers, is optional; a draft is in the conversation history, not in this repository.
 
 ## Switching voting back on (not done; shown for completeness)
 

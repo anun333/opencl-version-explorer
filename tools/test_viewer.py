@@ -34,7 +34,7 @@ setTimeout(()=>{const res={};try{
  show('compare');const ca=document.getElementById('ca');ca.value='v3.0.5';ca.dispatchEvent(new Event('change',{bubbles:true}));res.roundtrip=/ca=v3\\.0\\.5/.test(location.hash);
  // plain-language layer
  show('overview');res.plain_box=!!document.querySelector('.plain');
- show('optional');res.glossary_marks=document.querySelectorAll('.gl').length;
+ show('optional');res.apph_attribution=main.innerText.includes('Creative Commons Attribution 4.0')&&main.innerText.includes('Changes:')&&main.innerText.includes('Khronos does not endorse');res.apph_rows=main.innerText.includes('indicating that device does not support Shared Virtual Memory');res.glossary_marks=document.querySelectorAll('.gl').length;
  const g=document.querySelector('.gl');if(g){g.click();}res.popup=!!document.getElementById('gpop');
  show('propose');show('propose');document.querySelector('[data-add=commands]').click();res.propose_no_stacking=(document.querySelectorAll('#wform [data-del^="commands"]').length===1);
  document.getElementById('wex').click();{const j=JSON.parse(document.getElementById('wjson').value);res.propose_example=(j.extension.name==='cl_zzdemo_wizard_query'&&j.commands.length===1&&j.feature.absent.clGetDemoInfoZZDEMO==='CL_INVALID_OPERATION');res.propose_clean=!/problem/.test(document.getElementById('wcheck').innerText);}
@@ -70,7 +70,7 @@ for k, v in r["res"].items():
     elif k == "concerns_high":
         pass                                  # a count of chips, checked separately below
     elif isinstance(v, int) and not isinstance(v, bool) and v < 100: bad.append("%s looks empty (%s chars)" % (k, v))
-for k in ("compare_has_31_summary", "tour_steps", "tour_closed", "tour_resume", "propose_struct", "propose_no_stacking", "propose_example", "propose_clean", "propose_hash", "propose_restore", "propose_catches_clash", "dl_compare", "dl_bench", "dl_ext", "dl_concerns", "dl_structure", "roundtrip", "plain_box", "popup"):
+for k in ("apph_attribution", "apph_rows", "compare_has_31_summary", "tour_steps", "tour_closed", "tour_resume", "propose_struct", "propose_no_stacking", "propose_example", "propose_clean", "propose_hash", "propose_restore", "propose_catches_clash", "dl_compare", "dl_bench", "dl_ext", "dl_concerns", "dl_structure", "roundtrip", "plain_box", "popup"):
     if not r["res"].get(k): bad.append("shareable-link / plain-language check failed: " + k)
 if r["res"].get("glossary_marks", 0) < 3: bad.append("glossary marked fewer than 3 terms on the Optional features tab")
 if r["res"].get("help_terms", 0) < 30: bad.append("Start-here glossary has too few terms")

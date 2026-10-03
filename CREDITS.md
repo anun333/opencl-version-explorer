@@ -9,7 +9,7 @@ This tool is independent. It is not affiliated with, endorsed by, or reviewed by
 | `KhronosGroup/OpenCL-Docs`, `xml/cl.xml` | symbol names, extension names, revisions, dependencies, promotion and deprecation metadata | Apache License 2.0 (stated in the file) |
 | `KhronosGroup/OpenCL-Docs`, `api/appendix_e.asciidoc`, `api/opencl_architecture.asciidoc`, `api/opencl_platform_layer.asciidoc` | changelog sentences, requirement statements, counts of words | CC BY 4.0 (`SPDX-License-Identifier` in each file) |
 | `KhronosGroup/OpenCL-Docs`, `c/appendix_a.asciidoc` | OpenCL C changelog sentences | CC BY 4.0 (stated in the file) |
-| `KhronosGroup/OpenCL-Docs`, `api/appendix_h.asciidoc` | read at build time for names (functions, queries, feature macros) and counts of table rows; **its wording is not embedded or redistributed** | The file carries a copyright line but no licence statement, which is why the wording is withheld. |
+| `KhronosGroup/OpenCL-Docs`, `api/appendix_h.asciidoc` | the optional-feature tables and prose shown in the *Optional features* tab, lightly reformatted (see the note below) | CC BY 4.0 by the repository's general statement. The file has a copyright line but no licence header of its own: see the note below. |
 | `KhronosGroup/OpenCL-Docs`, extension chapters (`api/cl_*.asciidoc`) | word counts and keyword counts only (no text is embedded) | CC BY 4.0 |
 | `KhronosGroup/OpenCL-Headers` | symbol lists and guards; the headers are compiled locally and modified copies are generated in a scratch folder | Apache License 2.0 |
 | `KhronosGroup/OpenCL-Headers`, `scripts/` (header generator) | run unmodified by the proposal tester | Apache License 2.0 |
@@ -22,7 +22,11 @@ The data is extracted, restructured, joined across versions, and in places summa
 
 ## Note on appendix H
 
-Because `appendix_h.asciidoc` states no licence, the page does not embed its tables or prose. It shows names and counts derived from it and links to the specification for the wording. `tools/build_viewer.py` fails the build if known appendix H sentences appear in the page.
+`api/appendix_h.asciidoc` has a copyright line (The Khronos Group Inc.) but, unlike 119 of the 122 specification source files in `api/`, `c/` and `env/`, no licence header of its own (the other two are `c/features.txt` and `c/functions.txt`). The repository's `LICENSE` states that "the asciidoctor sources for the OpenCL Specifications and other documention are under the Creative Commons Attribution 4.0 International (CC BY 4.0) license", and its README says the same of the specification source files. This tool therefore shows appendix H's tables and prose under CC BY 4.0, with attribution on the *Optional features* tab: the copyright holder, a link to the source file at the commit used, a link to the licence, a statement that Khronos does not endorse the page, and the changes made.
+
+**Changes made to the text:** asciidoc markup was removed (emphasis underscores, inline-code backticks, escaped pipes, line-break markers), source comments (lines starting `//`, which are not part of the published text) were dropped, cross-reference macros such as `{clGetDeviceInfo}` were replaced by the plain name, and whitespace was collapsed. The wording is otherwise unchanged.
+
+If Khronos objects, or you prefer to be cautious, build with `WITHHOLD_APPENDIX_H=1` (see `tools/build_viewer.py`): the page then shows only names, counts and a link to the specification.
 
 ## Trademarks
 

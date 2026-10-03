@@ -11,6 +11,7 @@ from common import *
 MACRO = re.compile(r"\{([A-Za-z0-9_]+)\}")
 
 
+PLAIN = lambda t: re.sub(r"`([^`]*)`", r"\1", t.replace("\\|", "|"))        # inline-code backticks and escaped pipes are asciidoc markup
 EMPH = re.compile(r"(?<![\w])_([A-Za-z]+(?:_[A-Za-z]+)*)_(?![\w])")
 
 
@@ -26,21 +27,21 @@ def parse(tag):
             continue
         cur["prose"].append(line)
     for s in secs:
-        body = "\n".join(s["prose"])
+        body = "\n".join(l for l in s["prose"] if not l.lstrip().startswith("//"))      # asciidoc source comments are not part of the published text
         # table rows: "| API cell\n| behaviour cell" separated by blank lines inside |==== blocks
         for blk in re.findall(r"\|====\n(.*?)\n\|====", body, re.S):
             for row in re.split(r"\n\n(?=\| )", blk):
                 cells = re.split(r"\n\| ", row.strip().lstrip("|").strip(), maxsplit=1) if row.strip().startswith("|") else []
                 if len(cells) == 2 and not cells[0].startswith("*API*"):
-                    api = re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", cells[0].replace(" +", ""))).strip(" ,")
-                    beh = EMPH.sub(r"\1", re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", cells[1].replace(" +", " "))).strip())
+                    api = PLAIN(re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", cells[0].replace(" +", ""))).strip(" ,"))
+                    beh = PLAIN(EMPH.sub(r"\1", re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", cells[1].replace(" +", " "))).strip()))
                     s["rows"].append({"api": api, "behaviour": beh})
         ms = [m for m in MACRO.findall(body)]
         s["macros"] = sorted({m for m in ms if m.startswith("opencl_c_")})
         s["queries"] = sorted({m for m in ms if m.startswith("CL_DEVICE_") or m.startswith("CL_MEM_") or m.startswith("CL_PROGRAM_")})
         s["apis"] = sorted({m for m in ms if re.match(r"cl[A-Z]", m)})
         txt2 = re.sub(r"\|====.*?\|====", "", body, flags=re.S)
-        s["text"] = EMPH.sub(r"\1", re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", txt2)).strip())
+        s["text"] = PLAIN(EMPH.sub(r"\1", re.sub(r"\s+", " ", re.sub(r"\{([^}]+)\}", r"\1", txt2)).strip()))
         del s["prose"]
     return secs
 

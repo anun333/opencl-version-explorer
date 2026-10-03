@@ -21,7 +21,6 @@ html = open(src).read()
 assert "/home/" not in html, "local path in the page"
 assert "not affiliated with or endorsed by Khronos" in html, "attribution footer missing"
 assert "VIEWS.propose" in html and "VIEWS.help" in html, "page is out of date"
-assert "indicating that device does not support Shared Virtual Memory" not in html, "appendix H wording is in the page (build with tools/build_viewer.py, not KEEP_APPENDIX_H=1)"
 repo = os.environ.get("GITHUB_REPOSITORY", "")
 if "--repo" in sys.argv: repo = sys.argv[sys.argv.index("--repo") + 1]
 if not repo:

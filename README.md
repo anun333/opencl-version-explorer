@@ -75,7 +75,7 @@ The explorer is one self-contained file, so any static host works. This reposito
 
 A companion voting page (votes as GitHub reactions on issues, replies as comments) was built and then taken down on 2026-10-03; it is off by default and the doc explains how to switch it back on.
 
-The wording of appendix H of the API specification is deliberately not embedded in the page (its source file states no licence); the Optional features tab shows names and counts and links to the spec.
+The Optional features tab shows the tables and text of appendix H of the API specification, attributed under CC BY 4.0 (see `CREDITS.md` for the basis and the changes made); `WITHHOLD_APPENDIX_H=1` builds a page without the wording.
 
 ## Feedback
 
